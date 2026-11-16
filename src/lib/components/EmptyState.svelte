@@ -5,11 +5,22 @@
 	let {
 		icon: Icon,
 		title,
+		compact = false,
 		children
-	}: { icon: Component<{ class?: string }>; title: string; children?: Snippet } = $props();
+	}: {
+		icon: Component<{ class?: string }>;
+		title: string;
+		/** Less padding, for panels that share the screen with others */
+		compact?: boolean;
+		children?: Snippet;
+	} = $props();
 </script>
 
-<div class="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
+<div
+	class="flex flex-col items-center justify-center gap-2 px-6 text-center {compact
+		? 'py-6'
+		: 'py-12'}"
+>
 	<div class="mb-1 rounded-md border border-white/8 bg-white/[0.03] p-3 text-ink-400">
 		<Icon class="h-5 w-5" />
 	</div>

@@ -48,7 +48,7 @@
 </script>
 
 {#if !items.length}
-	<EmptyState icon={ListMusic} title="Nothing queued"
+	<EmptyState icon={ListMusic} title="Nothing queued" compact
 		>Paste a link above, or add a source to keep a playlist in sync.</EmptyState
 	>
 {:else}

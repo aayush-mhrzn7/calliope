@@ -59,7 +59,7 @@
 			<span class="font-mono text-[11px] text-ink-400">{totals.done.toLocaleString()} songs</span>
 		</div>
 		<DotArea
-			height={96}
+			height={112}
 			label="Downloads per day over the last 30 days: {totals.done} completed, {totals.failed} failed"
 			series={[
 				{ color: DM.green, values: done },

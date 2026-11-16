@@ -15,7 +15,6 @@
 	import { api } from '$lib/client/api';
 	import { rate } from '$lib/client/format';
 	import { live } from '$lib/client/live.svelte';
-	import { player } from '$lib/client/player.svelte';
 	import { ACTIVE_STATUSES, FINISHED_STATUSES } from '$lib/status';
 	import AddBar from '$lib/components/AddBar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -69,12 +68,7 @@
 
 <svelte:head><title>Pipeline · Calliope</title></svelte:head>
 
-<!-- On wide screens the page fits the window and each list scrolls inside its own panel -->
-<div
-	class="flex flex-col xl:[&>*]:shrink-0 {player.current
-		? 'xl:h-[calc(100dvh-7rem)]'
-		: 'xl:h-[calc(100dvh-2.5rem)]'}"
->
+<div>
 	<header class="flex flex-wrap items-end justify-between gap-3 pt-6 pb-4">
 		<div>
 			<h1 class="text-2xl font-semibold tracking-tight text-ink-50">Pipeline</h1>
@@ -152,7 +146,7 @@
 			</div>
 			<div class="px-4 pt-2 pb-3">
 				<DotArea
-					height={60}
+					height={72}
 					label="Download speed over the last two minutes"
 					series={[{ color: DM.green, values: live.speedHistory }]}
 					xLabels={['2 MIN AGO', '1 MIN', 'NOW']}
@@ -174,25 +168,23 @@
 
 	<PipelineHistory />
 
-	<div
-		class="mt-4 grid gap-4 xl:min-h-[380px] xl:flex-1 xl:!shrink xl:grid-cols-[minmax(0,1fr)_400px]"
-	>
-		<div class="flex min-w-0 flex-col gap-4 xl:min-h-0">
+	<div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
+		<div class="flex min-w-0 flex-col gap-4">
 			<div class="shrink-0"><YearHeatmap /></div>
 
-			<section class="glass flex shrink-0 flex-col p-3 xl:max-h-[45%] xl:min-h-0">
+			<section class="glass flex flex-col p-3">
 				<div class="mb-3 flex items-center justify-between px-1">
 					<h2 class="panel-title">Active downloads</h2>
 					{#if t.paused}<span class="chip border-warn/30 bg-warn/10 text-warn">Paused</span>{/if}
 				</div>
 				{#if active.length}
-					<div class="min-h-0 space-y-2 overflow-y-auto">
+					<div class="max-h-[420px] space-y-2 overflow-y-auto">
 						{#each active as track (track.id)}
 							<WorkerCard {track} telemetry={workerTelemetry.get(track.id)} />
 						{/each}
 					</div>
 				{:else}
-					<EmptyState icon={Cpu} title={t.paused ? 'Pipeline paused' : 'All workers idle'}>
+					<EmptyState compact icon={Cpu} title={t.paused ? 'Pipeline paused' : 'All workers idle'}>
 						{t.paused
 							? 'Resume to start processing the queue.'
 							: 'Workers pick up queued tracks automatically.'}
@@ -200,18 +192,18 @@
 				{/if}
 			</section>
 
-			<section class="glass flex flex-col overflow-hidden xl:min-h-[140px] xl:flex-1">
+			<section class="glass flex flex-col overflow-hidden">
 				<div class="flex shrink-0 items-center justify-between px-4 pt-3 pb-2">
 					<h2 class="panel-title">Up next</h2>
 					<span class="text-[11px] text-ink-500">Drag to reorder</span>
 				</div>
-				<div class="min-h-0 flex-1 overflow-y-auto">
+				<div class="max-h-[480px] overflow-y-auto">
 					<QueueList items={queued} total={Math.max(t.counts.queued, queued.length)} />
 				</div>
 			</section>
 		</div>
 
-		<section class="glass flex flex-col overflow-hidden xl:min-h-0">
+		<section class="glass flex h-fit flex-col overflow-hidden xl:sticky xl:top-3">
 			<div
 				class="flex shrink-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2.5"
 			>
@@ -227,7 +219,7 @@
 					{/each}
 				</div>
 			</div>
-			<div class="max-h-[70dvh] min-h-0 flex-1 overflow-y-auto xl:max-h-none">
+			<div class="max-h-[calc(100dvh-160px)] overflow-y-auto">
 				<FinishedFeed items={finished} />
 			</div>
 		</section>

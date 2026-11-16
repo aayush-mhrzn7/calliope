@@ -631,6 +631,7 @@
 						type="password"
 						placeholder="https://discord.com/api/webhooks/…"
 						bind:value={draft.discord.webhookUrl}
+						oninput={() => (draft.discord.enabled ||= !!draft.discord.webhookUrl)}
 					/>
 				</Field>
 				<div class="grid gap-x-4 sm:grid-cols-2">
@@ -639,6 +640,7 @@
 							class="input font-mono"
 							type="password"
 							bind:value={draft.discord.botToken}
+							oninput={() => (draft.discord.enabled ||= !!draft.discord.botToken)}
 						/></Field
 					>
 					<Field label="Channel ID"

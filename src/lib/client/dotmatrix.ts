@@ -132,21 +132,20 @@ const HEAT_LEFT = 26;
 const HEAT_TOP = 14;
 
 /**
- * Cell size that makes the year grid fill `width`, and the height that grid then needs. Cells
- * widen with the panel but stop growing taller at `maxRow`, so a wide panel stays compact.
+ * Square cells sized so the year grid fills `width` (up to `maxPitch` per cell, so a very wide
+ * panel doesn't grow a giant grid), and the height that grid then needs.
  */
-export function heatmapLayout(width: number, days: number, end: Date, maxRow = 14) {
+export function heatmapLayout(width: number, days: number, end: Date, maxPitch = 24) {
 	const weeks = Math.ceil((days + end.getDay() + 1) / 7);
-	const pitchX = Math.max(6, Math.min(40, Math.floor((width - HEAT_LEFT) / weeks)));
-	const pitchY = Math.min(pitchX, maxRow);
-	const gap = pitchY >= 12 ? 3 : 2;
+	const pitch = Math.max(6, Math.min(maxPitch, Math.floor((width - HEAT_LEFT) / weeks)));
+	const gap = pitch >= 12 ? 3 : 2;
 	return {
 		weeks,
-		pitchX,
-		pitchY,
-		cellW: pitchX - gap,
-		cellH: pitchY - gap,
-		height: HEAT_TOP + 7 * pitchY
+		pitchX: pitch,
+		pitchY: pitch,
+		cellW: pitch - gap,
+		cellH: pitch - gap,
+		height: HEAT_TOP + 7 * pitch
 	};
 }
 
