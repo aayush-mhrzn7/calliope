@@ -5,5 +5,5 @@ build
 .env
 data
 *.db
-legacy
+bun.lock
 docker-compose.yml

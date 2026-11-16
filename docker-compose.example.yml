@@ -3,16 +3,36 @@ services:
     build: .
     container_name: calliope
     ports:
-      - '7200:7200'
+      - '7200:7200' # web UI
     environment:
-      # First-boot password (skips the setup screen). Change it later in Settings › Account.
+      # First-boot password (skips the setup screen). Change it later in Settings › Account & data.
       CALLIOPE_PASSWORD: change-me
+      # Your timezone: decides when "today" starts for the pipeline counts.
       TZ: Etc/UTC
+      # Keep yt-dlp current on every start; YouTube breaks old releases. Set to 0 to pin it.
+      YTDLP_AUTO_UPDATE: '1'
     volumes:
-      - calliope-v2-data:/data # database, staging, quarantine
+      - calliope-v2-data:/data # database, staging, quarantine — back this up
       - /path/to/Music:/music # your library (read/write)
+      # Private playlists: export cookies.txt from a browser signed in to YouTube, then set
+      # Settings › yt-dlp flags › Cookies file to /config/cookies.txt.
       # - /path/to/cookies.txt:/config/cookies.txt:ro
     restart: unless-stopped
 
+  # Optional: stream the same library to your phone. In Calliope, set Settings › Integrations ›
+  # Navidrome to http://navidrome:4533 so new downloads show up right away.
+  # navidrome:
+  #   image: deluan/navidrome:latest
+  #   container_name: navidrome
+  #   ports:
+  #     - '4533:4533'
+  #   environment:
+  #     ND_SCANSCHEDULE: 0 # Calliope triggers scans after downloads
+  #   volumes:
+  #     - navidrome-data:/data
+  #     - /path/to/Music:/music:ro
+  #   restart: unless-stopped
+
 volumes:
   calliope-v2-data:
+  # navidrome-data:

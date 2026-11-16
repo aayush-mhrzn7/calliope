@@ -55,8 +55,11 @@ cp docker-compose.example.yml docker-compose.yml   # edit the volume paths and p
 docker compose up -d --build
 ```
 
-Open `http://localhost:7200`. The image bundles FFmpeg, Chromaprint, deno and yt-dlp, and updates
-yt-dlp on every start (`YTDLP_AUTO_UPDATE=1`). YouTube regularly breaks old yt-dlp releases.
+Open `http://localhost:7200`. The image bundles FFmpeg, Chromaprint (fpcalc, for AcoustID and
+duplicate detection), deno and yt-dlp, and updates yt-dlp on every start (`YTDLP_AUTO_UPDATE=1`).
+YouTube regularly breaks old yt-dlp releases. Set `TZ` to your timezone so the pipeline's "today"
+counts roll over at your midnight. The example file also has an optional Navidrome service that
+shares the music folder.
 
 The app works at whatever address you open it at (LAN IP, hostname, reverse proxy or tunnel) — no `ORIGIN` needed. Proxies should pass the original `Host` (or `X-Forwarded-Host`) and `X-Forwarded-Proto`.
 
