@@ -6,6 +6,7 @@
 		CircleCheck,
 		Cpu,
 		FolderTree,
+		Gauge,
 		KeyRound,
 		LoaderCircle,
 		Plug,
@@ -36,7 +37,8 @@
 
 	const NAV = [
 		{ key: 'library', label: 'Library & paths', icon: FolderTree },
-		{ key: 'pipeline', label: 'Pipeline & format', icon: SlidersHorizontal },
+		{ key: 'pipeline', label: 'Format & lyrics', icon: SlidersHorizontal },
+		{ key: 'workers', label: 'Workers', icon: Gauge },
 		{ key: 'downloader', label: 'yt-dlp flags', icon: Terminal },
 		{ key: 'binaries', label: 'Binaries', icon: Cpu },
 		{ key: 'integrations', label: 'Integrations', icon: Plug },
@@ -337,7 +339,26 @@
 				{/if}
 			</Section>
 
-			<Section title="Workers">
+			<Section title="Lyrics" description="Fetched from LRCLIB and embedded in the file.">
+				<Field row label="Fetch lyrics"
+					><Switch bind:checked={draft.lyrics.enabled} label="Fetch lyrics" /></Field
+				>
+				<Field
+					row
+					label="Prefer synced (LRC) lyrics"
+					hint="Timestamped lyrics for players that support karaoke-style display."
+				>
+					<Switch bind:checked={draft.lyrics.preferSynced} label="Prefer synced" />
+				</Field>
+				<Field row label="Also write .lrc sidecar files"
+					><Switch bind:checked={draft.lyrics.writeLrcFile} label="Write LRC" /></Field
+				>
+			</Section>
+		{:else if data.section === 'workers'}
+			<Section
+				title="Workers"
+				description="How many songs download at once, and what each worker does with them."
+			>
 				<Field
 					row
 					label="Parallel downloads"
@@ -381,22 +402,6 @@
 						bind:value={draft.pipeline.maxAttempts}
 					/>
 				</Field>
-			</Section>
-
-			<Section title="Lyrics" description="Fetched from LRCLIB and embedded in the file.">
-				<Field row label="Fetch lyrics"
-					><Switch bind:checked={draft.lyrics.enabled} label="Fetch lyrics" /></Field
-				>
-				<Field
-					row
-					label="Prefer synced (LRC) lyrics"
-					hint="Timestamped lyrics for players that support karaoke-style display."
-				>
-					<Switch bind:checked={draft.lyrics.preferSynced} label="Prefer synced" />
-				</Field>
-				<Field row label="Also write .lrc sidecar files"
-					><Switch bind:checked={draft.lyrics.writeLrcFile} label="Write LRC" /></Field
-				>
 			</Section>
 		{:else if data.section === 'downloader'}
 			<Section

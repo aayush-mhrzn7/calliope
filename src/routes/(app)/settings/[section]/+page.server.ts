@@ -6,7 +6,15 @@ import { env } from '$lib/server/env';
 import { checkDir } from '$lib/server/paths';
 import { publicSettings } from '$lib/server/settings';
 
-const SECTIONS = ['library', 'pipeline', 'downloader', 'binaries', 'integrations', 'account'];
+const SECTIONS = [
+	'library',
+	'pipeline',
+	'workers',
+	'downloader',
+	'binaries',
+	'integrations',
+	'account'
+];
 
 export const load = async ({ params }) => {
 	if (!SECTIONS.includes(params.section)) error(404, 'Unknown settings section');
