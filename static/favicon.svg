@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<title>Calliope</title>
+	<rect width="64" height="64" rx="14" fill="#0a0a0a"/>
+	<g fill="none" stroke="#3fb950" stroke-linecap="round" stroke-linejoin="round">
+		<!-- lyre arms -->
+		<path stroke-width="4.5" d="M19 13c-6 6-7 16-1 23 3 4 7 6 14 6s11-2 14-6c6-7 5-17-1-23"/>
+		<!-- crossbar -->
+		<path stroke-width="4" d="M17 17h30"/>
+		<!-- strings -->
+		<path stroke-width="2.5" stroke="#5fd47a" d="M26 18v24M32 18v24M38 18v24"/>
+		<!-- base -->
+		<path stroke-width="4.5" d="M24 50h16"/>
+		<path stroke-width="4" d="M32 42v8"/>
+	</g>
+</svg>
