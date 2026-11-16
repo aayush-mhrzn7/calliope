@@ -52,6 +52,7 @@
 			<button class="btn btn-ghost btn-icon" onclick={() => (drawer = !drawer)} aria-label="Menu">
 				{#if drawer}<X class="h-4 w-4" />{:else}<Menu class="h-4 w-4" />{/if}
 			</button>
+			<img src="/favicon.svg" alt="" class="h-5 w-5" />
 			<span class="text-sm font-semibold">Calliope</span>
 			<span class="ml-auto h-2 w-2 rounded-full {live.connected ? 'bg-ok' : 'bg-bad'}"></span>
 		</div>

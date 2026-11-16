@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import {
-		AudioWaveform,
 		Copy,
 		Gauge,
 		Library,
@@ -65,7 +64,7 @@
 
 <nav class="flex h-full flex-col">
 	<a href="/pipeline" class="group flex items-center gap-2.5 px-5 pt-5 pb-6" onclick={onnavigate}>
-		<AudioWaveform class="h-5 w-5 text-amber" strokeWidth={2.25} />
+		<img src="/favicon.svg" alt="" class="h-6 w-6" />
 		<div class="text-[15px] leading-none font-semibold tracking-tight text-ink-50">Calliope</div>
 	</a>
 
