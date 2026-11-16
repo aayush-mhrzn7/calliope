@@ -50,10 +50,27 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
 
 ## Running with Docker
 
+Every push to `main` is tested and published by GitHub Actions as
+`ghcr.io/aayush-mhrzn7/calliope` (`latest`, `sha-<commit>`, and a version tag for each `v*` release),
+so the server only downloads a ready image — nothing is compiled on it.
+
 ```bash
-cp docker-compose.example.yml docker-compose.yml   # edit the volume paths and password
-docker compose up -d --build
+mkdir calliope && cd calliope
+curl -fsSLo docker-compose.yml https://raw.githubusercontent.com/aayush-mhrzn7/calliope/main/docker-compose.example.yml
+# edit docker-compose.yml: the password, TZ and your Music path
+docker compose up -d
 ```
+
+Update to the newest version:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+To stay on one version, use a commit or release tag instead of `latest`, for example
+`ghcr.io/aayush-mhrzn7/calliope:sha-1a2b3c4`. To build the image yourself instead, clone the repo,
+replace `image:` with `build: .` and run `docker compose up -d --build` (slow on small machines:
+it compiles the SQLite driver and bundles the app). The published image is for Intel/AMD (`linux/amd64`).
 
 Open `http://localhost:7200`. The image bundles FFmpeg, Chromaprint (fpcalc, for AcoustID and
 duplicate detection), deno and yt-dlp, and updates yt-dlp on every start (`YTDLP_AUTO_UPDATE=1`).

@@ -1,6 +1,9 @@
 services:
   calliope:
-    build: .
+    # Built by GitHub Actions on every push to main; update with `docker compose pull`.
+    image: ghcr.io/aayush-mhrzn7/calliope:latest
+    # Or build it yourself from a clone of the repo (slow on small machines):
+    # build: .
     container_name: calliope
     ports:
       - '7200:7200' # web UI
