@@ -50,27 +50,30 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
 
 ## Running with Docker
 
-Every push to `main` is tested and published by GitHub Actions as
-`ghcr.io/aayush-mhrzn7/calliope` (`latest`, `sha-<commit>`, and a version tag for each `v*` release),
-so the server only downloads a ready image — nothing is compiled on it.
+Build the image on a fast computer and send it to the server, so nothing is compiled on the server
+(building compiles the SQLite driver and bundles the app, which is slow on small machines):
 
 ```bash
-mkdir calliope && cd calliope
-curl -fsSLo docker-compose.yml https://raw.githubusercontent.com/aayush-mhrzn7/calliope/main/docker-compose.example.yml
-# edit docker-compose.yml: the password, TZ and your Music path
-docker compose up -d
+# on your desktop, in this repo (Docker running, SSH access to the server)
+scripts/ship-image.sh homelab
 ```
 
-Update to the newest version:
+The script builds `calliope:latest` for `linux/amd64` (also from an Apple-silicon Mac), streams it
+to the server over SSH with `docker save | docker load`, and restarts the stack in
+`/srv/stacks/calliope` if it is there (`STACK_DIR=…` to change). Run it again to update.
+
+On the server, the first time:
 
 ```bash
-docker compose pull && docker compose up -d
+mkdir -p /srv/stacks/calliope && cd /srv/stacks/calliope
+curl -fsSLo compose.yaml https://raw.githubusercontent.com/aayush-mhrzn7/calliope/main/docker-compose.example.yml
+# edit compose.yaml: the password, TZ and your Music path
+docker compose up -d      # after the image has been shipped
 ```
 
-To stay on one version, use a commit or release tag instead of `latest`, for example
-`ghcr.io/aayush-mhrzn7/calliope:sha-1a2b3c4`. To build the image yourself instead, clone the repo,
-replace `image:` with `build: .` and run `docker compose up -d --build` (slow on small machines:
-it compiles the SQLite driver and bundles the app). The published image is for Intel/AMD (`linux/amd64`).
+The compose file uses `image: calliope:latest` with `pull_policy: never`, so `docker compose pull`
+skips it. To build on the server instead, clone the repo there, replace `image:` with `build: .`
+and run `docker compose up -d --build`.
 
 Open `http://localhost:7200`. The image bundles FFmpeg, Chromaprint (fpcalc, for AcoustID and
 duplicate detection), deno and yt-dlp, and updates yt-dlp on every start (`YTDLP_AUTO_UPDATE=1`).

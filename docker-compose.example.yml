@@ -1,8 +1,9 @@
 services:
   calliope:
-    # Built by GitHub Actions on every push to main; update with `docker compose pull`.
-    image: ghcr.io/aayush-mhrzn7/calliope:latest
-    # Or build it yourself from a clone of the repo (slow on small machines):
+    # Built on another computer and sent here with scripts/ship-image.sh — never pulled.
+    image: calliope:latest
+    pull_policy: never
+    # Or build it on this machine from a clone of the repo (slow on small machines):
     # build: .
     container_name: calliope
     ports:
