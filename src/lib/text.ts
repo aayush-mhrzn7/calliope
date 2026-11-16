@@ -62,6 +62,25 @@ export function similarity(a: string | null | undefined, b: string | null | unde
 }
 
 /** Primary artist only: "A, B & C" → "a" */
+/** The first name in a credit, as written: "Drake, Qendresa" and "DRAKE FT. LOE SHIMMY" give "Drake"/"DRAKE". */
+export function leadArtist(s: string): string {
+	return s.split(/\s*(?:,|;|\/|&|\sx\s|\b(?:feat|ft)\b\.?)\s*/i)[0].trim() || s.trim();
+}
+
+/**
+ * Who an album belongs to, for the album artist tag and folder: the uploading channel when the
+ * credit starts with it ("Drake" for "Drake, Qendresa", while "Tyler, The Creator" stays whole),
+ * else the first credited name.
+ */
+export function albumArtistFor(credit: string, channel: string | null | undefined): string {
+	const ch = channel
+		?.replace(/\s+-\s+Topic$/, '')
+		.replace(/VEVO$/i, '')
+		.trim();
+	if (ch && normalize(credit).startsWith(normalize(ch))) return ch;
+	return leadArtist(credit);
+}
+
 export function primaryArtist(s: string | null | undefined): string {
 	return normalize((s ?? '').split(/\s*(?:,|;|\/|&|\sx\s|\sand\s|\b(?:feat|ft)\b\.?)\s*/i)[0]);
 }

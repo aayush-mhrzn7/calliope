@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanTitle, matchKey, similarity, splitArtistTitle } from './text';
+import { albumArtistFor, cleanTitle, matchKey, similarity, splitArtistTitle } from './text';
 
 describe('text helpers', () => {
 	it('cleans upload noise', () => {
@@ -47,5 +47,18 @@ describe('text helpers', () => {
 		// "ft" inside a word is not a featuring credit
 		expect(matchKey('Daft Punk', 'Aerodynamic')).toBe('daft punk|aerodynamic');
 		expect(matchKey('Daft Punk ft. Pharrell', 'Get Lucky')).toBe('daft punk|get lucky');
+	});
+});
+
+describe('albumArtistFor', () => {
+	it.each([
+		['Drake, Qendresa', 'Drake', 'Drake'],
+		['Drake, Don Toliver, Yebba', 'Drake - Topic', 'Drake'],
+		['Tyler, The Creator, Kali Uchis', 'Tyler, The Creator', 'Tyler, The Creator'],
+		['Drake & Sexyy Red', 'SomeFanChannel', 'Drake'],
+		['DRAKE FT. LOE SHIMMY', null, 'DRAKE'],
+		['Taylor Swift', 'TaylorSwiftVEVO', 'Taylor Swift']
+	])('%s on %s → %s', (credit, channel, expected) => {
+		expect(albumArtistFor(credit, channel)).toBe(expected);
 	});
 });

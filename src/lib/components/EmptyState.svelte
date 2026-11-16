@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-	<div class="mb-1 rounded-xl border border-white/8 bg-white/[0.03] p-3 text-ink-400">
+	<div class="mb-1 rounded-md border border-white/8 bg-white/[0.03] p-3 text-ink-400">
 		<Icon class="h-5 w-5" />
 	</div>
 	<div class="text-sm font-medium text-ink-100">{title}</div>

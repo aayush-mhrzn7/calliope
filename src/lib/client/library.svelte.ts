@@ -1,4 +1,6 @@
+import { browser } from '$app/environment';
 import { decodeRows, type LibraryRow } from '$lib/library-columns';
+import { live } from './live.svelte';
 import type { PlayerTrack } from './player.svelte';
 
 /** Client-side copy of the library index, shared by Explorer, Studio and Duplicates. */
@@ -36,6 +38,18 @@ class LibraryStore {
 }
 
 export const library = new LibraryStore();
+
+// Finished downloads are already indexed when the pipeline reports them: reload shortly after,
+// batching a burst of finishes (an album) into one fetch.
+if (browser) {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	live.subscribe((event, data) => {
+		if (event !== 'track' || (data as { status?: string }).status !== 'done') return;
+		if (!library.loaded) return;
+		clearTimeout(timer);
+		timer = setTimeout(() => void library.load(true), 1500);
+	});
+}
 
 export const toPlayerTrack = (r: LibraryRow): PlayerTrack => ({
 	id: r.id,

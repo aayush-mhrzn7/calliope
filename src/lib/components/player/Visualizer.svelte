@@ -31,10 +31,7 @@
 				const target = buf && player.playing ? buf[bin] / 255 : 0;
 				levels[i] += (target - levels[i]) * (target > levels[i] ? 0.5 : 0.12);
 				const h = Math.max(2, levels[i] * height);
-				const grad = g.createLinearGradient(0, height, 0, height - h);
-				grad.addColorStop(0, '#8b5cf6');
-				grad.addColorStop(1, '#ffb547');
-				g.fillStyle = grad;
+				g.fillStyle = '#3fb950';
 				g.fillRect(i * w + 1, height - h, w - 2, h);
 			}
 			raf = requestAnimationFrame(draw);

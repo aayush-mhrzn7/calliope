@@ -31,8 +31,7 @@ export const POST = handler(async (event) => {
 						{
 							provider: link.provider,
 							requestedUrl: link.url,
-							spotifyId: link.provider === 'spotify' ? link.id : null,
-							youtubeId: link.provider === 'youtube' ? link.id : null,
+							youtubeId: link.id,
 							force: true
 						}
 					],

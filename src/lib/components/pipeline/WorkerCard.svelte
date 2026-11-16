@@ -40,7 +40,7 @@
 </script>
 
 <div
-	class="animate-rise rounded-xl border border-white/6 bg-ink-850/60 transition hover:border-white/10"
+	class="animate-rise rounded-md border border-white/6 bg-ink-850/60 transition hover:border-white/10"
 >
 	<div class="flex items-center gap-3 p-3">
 		<div class="relative">
@@ -117,7 +117,7 @@
 	{#if downloading}
 		<div class="mx-3 mb-3 h-1 overflow-hidden rounded-full bg-white/5">
 			<div
-				class="h-full rounded-full bg-gradient-to-r from-violet via-amber to-amber-glow shadow-[0_0_10px] shadow-amber/50 transition-[width] duration-700"
+				class="h-full bg-amber transition-[width] duration-700"
 				style="width:{telemetry?.percent ?? 0}%"
 			></div>
 		</div>

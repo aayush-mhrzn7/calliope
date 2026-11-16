@@ -416,7 +416,7 @@
 										<th class="p-2 text-left align-top font-normal">
 											<button
 												class="w-full rounded-lg border p-2.5 text-left transition {keepId === f.id
-													? 'border-amber/50 bg-amber/10 shadow-[0_0_24px_-10px_rgb(245_165_36/0.8)]'
+													? 'border-amber bg-amber/5'
 													: 'border-white/6 bg-white/[0.02] hover:border-white/15'}"
 												onclick={() => (keepers[g.key] = f.id)}
 											>
@@ -510,7 +510,7 @@
 
 {#if showPurge}
 	<button
-		class="fixed inset-0 z-50 cursor-default bg-black/60 backdrop-blur-sm"
+		class="fixed inset-0 z-50 cursor-default bg-black/80"
 		onclick={() => (showPurge = false)}
 		aria-label="Close"
 	></button>

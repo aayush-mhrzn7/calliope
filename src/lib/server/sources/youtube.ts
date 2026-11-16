@@ -70,7 +70,7 @@ type RawEntry = {
 	channel_id?: string;
 	view_count?: number;
 	url?: string;
-	thumbnails?: { url: string; width?: number }[];
+	thumbnails?: Thumb[];
 	thumbnail?: string;
 	track?: string;
 	artist?: string;
@@ -116,39 +116,20 @@ export async function ytVideoInfo(idOrUrl: string, opts: RunOptions = {}): Promi
 	};
 }
 
-function bestThumb(raw: RawEntry) {
+type Thumb = { url: string; width?: number; height?: number };
+
+/**
+ * The best cover for a video. YouTube Music songs carry the square album cover alongside the 16:9
+ * video frames (which show it letterboxed): that one wins, asked for at full size.
+ */
+export function bestThumb(raw: { thumbnails?: Thumb[]; thumbnail?: string }) {
 	const list = (raw.thumbnails ?? []).filter((t) => t.url && !t.url.includes('.webp'));
 	list.sort((a, b) => (b.width ?? 0) - (a.width ?? 0));
+	const square = list.find(
+		(t) => t.width && t.width === t.height && /googleusercontent\.com/.test(t.url)
+	);
+	if (square) return square.url.replace(/=w\d+-h\d+/, '=w1200-h1200');
 	return list[0]?.url ?? raw.thumbnail ?? null;
-}
-
-/** Plain YouTube search — returns durations and channels, which matching needs. */
-export async function ytSearch(
-	query: string,
-	count = 6,
-	opts: RunOptions = {}
-): Promise<YtEntry[]> {
-	const res = await ytdlpJson<{ entries?: RawEntry[] }>(
-		['--flat-playlist', `ytsearch${count}:${query}`],
-		opts
-	);
-	return (res.entries ?? []).map(toEntry).filter((e): e is YtEntry => !!e);
-}
-
-/** YouTube Music "Songs" search. Flat results carry only id + title, so ranking comes from YTM itself. */
-export async function ytMusicSearch(
-	query: string,
-	count = 3,
-	opts: RunOptions = {}
-): Promise<{ id: string; title: string }[]> {
-	const url = `https://music.youtube.com/search?q=${encodeURIComponent(query)}#songs`;
-	const res = await ytdlpJson<{ entries?: RawEntry[] }>(
-		['--flat-playlist', '--playlist-end', String(count), url],
-		opts
-	);
-	return (res.entries ?? [])
-		.filter((e) => e.id && e.title)
-		.map((e) => ({ id: e.id!, title: e.title! }));
 }
 
 function entryToTrack(e: YtEntry, position: number, album?: string | null): RemoteTrack {

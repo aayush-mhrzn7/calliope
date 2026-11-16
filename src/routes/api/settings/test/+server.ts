@@ -3,16 +3,12 @@ import { z } from 'zod';
 import { body, handler } from '$lib/server/http';
 import { notifyDiscord } from '$lib/server/integrations/discord';
 import { testNavidrome } from '$lib/server/integrations/navidrome';
-import { soulseek } from '$lib/server/soulseek';
-import { testSpotifyApi } from '$lib/server/sources/spotify';
 
-const Body = z.object({ target: z.enum(['spotify', 'navidrome', 'discord', 'soulseek']) });
+const Body = z.object({ target: z.enum(['navidrome', 'discord']) });
 
 export const POST = handler(async (event) => {
 	const { target } = await body(event, Body);
-	if (target === 'spotify') return json({ message: await testSpotifyApi() });
 	if (target === 'navidrome') return json({ message: await testNavidrome() });
-	if (target === 'soulseek') return json({ message: await soulseek.test() });
 	await notifyDiscord(
 		'completed',
 		{ title: '✅ Calliope test', description: 'Notifications are working.' },

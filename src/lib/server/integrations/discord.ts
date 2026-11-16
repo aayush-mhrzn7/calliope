@@ -91,9 +91,6 @@ function fileFormat(t: TrackInfo) {
 	return ext.toUpperCase() + (lossy && t.bitrate ? ` · ${t.bitrate} kbps` : '');
 }
 
-const origin = (t: TrackInfo) =>
-	t.matchUrl?.startsWith('soulseek:') ? 'Soulseek' : t.matchUrl ? 'YouTube' : null;
-
 const thumbnail = (t: TrackInfo) =>
 	t.artworkUrl?.startsWith('http') ? { thumbnail: { url: t.artworkUrl } } : {};
 
@@ -120,8 +117,7 @@ export function completedEmbeds(tracks: TrackInfo[]): Embed[] {
 		fields: [
 			...field('Album', t.album),
 			...field('Format', fileFormat(t)),
-			...field('Size', t.fileSize ? megabytes(t.fileSize) : null),
-			...field('Source', origin(t))
+			...field('Size', t.fileSize ? megabytes(t.fileSize) : null)
 		],
 		...thumbnail(t)
 	}));

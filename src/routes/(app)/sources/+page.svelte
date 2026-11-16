@@ -8,15 +8,14 @@
 	import SourceCard from '$lib/components/sources/SourceCard.svelte';
 
 	let { data } = $props();
-	let filter = $state<'all' | 'spotify' | 'youtube' | 'missing'>('all');
+	let filter = $state<'all' | 'playlist' | 'album' | 'channel' | 'missing'>('all');
 
 	// Layout data seeds the store; SSR renders straight from it.
 	const sources = $derived(browser ? [...live.sources.values()] : data.sources);
 	const shown = $derived(
 		sources
 			.filter(
-				(s) =>
-					filter === 'all' || (filter === 'missing' ? s.missingCount > 0 : s.provider === filter)
+				(s) => filter === 'all' || (filter === 'missing' ? s.missingCount > 0 : s.kind === filter)
 			)
 			.sort((a, b) => a.name.localeCompare(b.name))
 	);
@@ -50,7 +49,7 @@
 
 {#if sources.length}
 	<div class="mt-5 mb-3 flex gap-1 text-xs">
-		{#each [['all', 'All'], ['missing', 'Has missing'], ['spotify', 'Spotify'], ['youtube', 'YouTube']] as [key, label] (key)}
+		{#each [['all', 'All'], ['missing', 'Has missing'], ['playlist', 'Playlists'], ['album', 'Albums'], ['channel', 'Channels']] as [key, label] (key)}
 			<button
 				class="rounded-full border px-3 py-1 transition {filter === key
 					? 'border-amber/40 bg-amber/10 text-amber-glow'
@@ -67,8 +66,8 @@
 {:else}
 	<div class="glass mt-5">
 		<EmptyState icon={Radio} title="No sources yet">
-			Paste a Spotify playlist or album, or a YouTube playlist or channel above and hit <b
-				class="text-violet-glow">Monitor</b
+			Paste a YouTube playlist, album or channel above and hit <b class="text-violet-glow"
+				>Monitor</b
 			>. Calliope checks it on a schedule and queues anything you don't have.
 		</EmptyState>
 	</div>

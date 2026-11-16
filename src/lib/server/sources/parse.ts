@@ -1,4 +1,4 @@
-export type Provider = 'spotify' | 'youtube';
+export type Provider = 'youtube';
 export type LinkKind = 'track' | 'playlist' | 'album' | 'channel';
 
 export interface ParsedLink {
@@ -9,17 +9,11 @@ export interface ParsedLink {
 	url: string;
 }
 
-const SPOTIFY_URI = /^spotify:(track|playlist|album):([A-Za-z0-9]{22})$/;
-const SPOTIFY_PATH =
-	/^\/(?:intl-[a-z]{2}(?:-[a-z]{2})?\/)?(?:embed\/)?(track|playlist|album)\/([A-Za-z0-9]{22})/i;
 const YT_ID = /^[A-Za-z0-9_-]{11}$/;
 
 export function parseLink(raw: string): ParsedLink | null {
 	const input = raw.trim();
 	if (!input) return null;
-
-	const uri = input.match(SPOTIFY_URI);
-	if (uri) return spotify(uri[1] as LinkKind, uri[2]);
 
 	let url: URL;
 	try {
@@ -28,11 +22,6 @@ export function parseLink(raw: string): ParsedLink | null {
 		return null;
 	}
 	const host = url.hostname.replace(/^(www|m)\./, '').toLowerCase();
-
-	if (host === 'open.spotify.com' || host === 'play.spotify.com') {
-		const m = url.pathname.match(SPOTIFY_PATH);
-		return m ? spotify(m[1].toLowerCase() as LinkKind, m[2]) : null;
-	}
 
 	if (host === 'youtu.be') {
 		const id = url.pathname.slice(1).split('/')[0];
@@ -83,10 +72,6 @@ export function parseLinks(input: string): { links: ParsedLink[]; invalid: strin
 		links.push(link);
 	}
 	return { links, invalid };
-}
-
-function spotify(kind: LinkKind, id: string): ParsedLink {
-	return { provider: 'spotify', kind, id, url: `https://open.spotify.com/${kind}/${id}` };
 }
 
 function ytVideo(id: string): ParsedLink {

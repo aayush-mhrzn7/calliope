@@ -1,6 +1,6 @@
 # Calliope
 
-Self-hosted music harvester and library studio. Paste Spotify or YouTube links, or monitor playlists,
+Self-hosted music harvester and library studio. Paste YouTube links, or monitor playlists,
 albums and channels, and Calliope matches, downloads, tags and files every track into your library.
 
 Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Drizzle and SQLite.
@@ -12,21 +12,16 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
 - **Pipeline:** a persistent download queue that survives restarts, with parallel workers, live
   progress/speed/ETA over SSE, per-track yt-dlp logs, drag-and-drop reordering, pause/resume and
   retries with backoff.
-- **Sources:** monitor Spotify playlists and albums, and YouTube playlists, albums and channels.
+- **Sources:** monitor YouTube playlists, albums and channels.
   Each source has its own schedule (15 min to daily, or manual), and new tracks are either
   auto-queued or held in a diff preview for you to pick from.
-- **Matching:** Spotify tracks are matched to YouTube using the top YouTube Music result plus
-  YouTube search. Candidates are scored on title, artist and duration, and live, cover and remix
-  uploads are penalized. Low-confidence matches are flagged, and very low ones are rejected.
+- **Identification:** YouTube Music's own song data (title, artists, album, year and the square
+  album cover) comes first, then the video title. The album YouTube Music names is kept — it knows
+  new releases before MusicBrainz does — and MusicBrainz fills in track numbers, genres and the
+  year. The uploading channel becomes the album artist, so featured artists don't split an album.
 - **Tagging:** title, artists, album, album artist, track/disc numbers, year, cover art and
   (synced) lyrics from LRCLIB, written natively with TagLib for MP3, M4A, Opus and FLAC.
 - **Filing:** a folder template engine, e.g. `{albumartist|artist}/{album|Singles}/[{track:02} - ]{title}`.
-- **Soulseek:** optional built-in client. Search what other users share, filter to FLAC or any
-  lossless format, and queue single files or whole folders. Files keep their original format and
-  tags and go through the same tagging and filing as other downloads.
-  Pick the preferred source under Settings › Pipeline: with Soulseek first, every download is
-  looked up there for a real lossless copy and falls back to YouTube; with YouTube first,
-  Soulseek is the fallback for tracks YouTube cannot deliver.
 - **Integrations:** Navidrome rescan and Discord notifications (webhook or bot).
 
 **Library**
@@ -35,8 +30,9 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
   table with multi-column sort (shift-click adds a sort key), instant search, format/quality/missing-tag
   filters, an artist facet, an album grid and a track details drawer.
 - **Player:** Web Audio playback with an interactive waveform, live spectrum visualizer,
-  near-gapless transitions, loudness normalization (capped by each track's peak headroom), media keys
-  and a play queue.
+  near-gapless transitions, loudness normalization (capped by each track's peak headroom), media keys,
+  a play queue and a lyrics panel (press `L`): synced lyrics follow the song and a click on a line
+  jumps there.
 - **Metadata Studio:** a spreadsheet-style tag grid with staged edits (nothing is written until you
   save). Tools:
   - bulk edit
@@ -79,26 +75,10 @@ npm run dev          # http://localhost:7200
 
 The first visit opens a setup screen to choose the library and staging folders and set a password.
 
-## Coming from Calliope v1
-
-Mount the old data volume and use **Settings › Account & data › Import from Calliope v1** (or set
-`LEGACY_DB`). This imports monitored playlists and finished-download history, so monitors don't
-re-download what you already have.
-
 ## Notes
 
-- **Spotify:** public playlists are read in full without credentials, the same way the web player
-  lists them. That path is unofficial; if Spotify changes it, listings fall back to the public embed
-  page, which carries the first 100 tracks. Adding API credentials helps with album and track
-  metadata (album names, track numbers, release dates).
 - **Formats:** YouTube audio is lossy. The FLAC preset stores it losslessly but adds no quality.
   Opus avoids re-encoding.
-- **Soulseek:** turn it on under Settings › Integrations with an account no other Soulseek app is
-  signed in to (one account can be online in one place only). It works without an open port; for
-  more results, publish the listening port (default 2234) in Docker and forward it on your router.
-  Busy peers queue requests, so a download can wait before it starts; after the configured wait it
-  is dropped and retried. Calliope downloads but does not share files, and some users only serve
-  people who share. Files over 400 MB are refused. Only download what you have the right to.
 
 ## Development
 

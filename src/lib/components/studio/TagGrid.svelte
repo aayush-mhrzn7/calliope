@@ -36,7 +36,7 @@
 
 <div class="overflow-auto">
 	<table class="w-max min-w-full border-separate border-spacing-0 text-[12.5px]">
-		<thead class="sticky top-0 z-10 bg-ink-850/95 backdrop-blur">
+		<thead class="sticky top-0 z-10 bg-ink-900">
 			<tr class="text-left text-[10.5px] tracking-wider text-ink-400 uppercase">
 				<th class="sticky left-0 z-10 w-9 border-b border-white/5 bg-ink-850 py-2 pl-3">
 					<input
@@ -65,7 +65,7 @@
 				>
 					<td
 						class="sticky left-0 border-b border-white/[0.04] py-1.5 pl-3 {sel
-							? 'bg-[#15130f]'
+							? 'bg-[#0d1a10]'
 							: 'bg-ink-850'}"
 					>
 						<input
@@ -77,7 +77,7 @@
 					</td>
 					<td
 						class="sticky left-9 border-b border-white/[0.04] py-1.5 pr-3 {sel
-							? 'bg-[#15130f]'
+							? 'bg-[#0d1a10]'
 							: 'bg-ink-850'}"
 					>
 						<button

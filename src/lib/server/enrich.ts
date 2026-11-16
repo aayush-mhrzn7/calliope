@@ -436,7 +436,7 @@ export interface TagFields {
 
 /**
  * Merge an enrichment into existing tag values.
- * `keepAlbum`: the current album is authoritative (e.g. Spotify said which release this is),
+ * `keepAlbum`: the current album is authoritative (e.g. YouTube Music named the release),
  * so only fill gaps around it instead of switching to MusicBrainz's studio album.
  */
 export function applyEnrichment(cur: TagFields, e: Enrichment, opts: { keepAlbum?: boolean } = {}) {

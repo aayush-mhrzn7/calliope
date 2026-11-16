@@ -3,19 +3,6 @@ import { parseLink, parseLinks } from './parse';
 
 describe('parseLink', () => {
 	it.each([
-		[
-			'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=abc',
-			'spotify',
-			'track',
-			'4uLU6hMCjMI75M1A2tKUQC'
-		],
-		[
-			'https://open.spotify.com/intl-de/album/2noRn2Aes5aoNVsU6iWThc',
-			'spotify',
-			'album',
-			'2noRn2Aes5aoNVsU6iWThc'
-		],
-		['spotify:playlist:37i9dQZF1DXcBWIGoYBM5M', 'spotify', 'playlist', '37i9dQZF1DXcBWIGoYBM5M'],
 		['https://youtu.be/K0HSD_i2DvA?t=3', 'youtube', 'track', 'K0HSD_i2DvA'],
 		[
 			'https://music.youtube.com/watch?v=Jb6gcoR266U&list=RDAMVM',
@@ -48,6 +35,7 @@ describe('parseLink', () => {
 
 	it('rejects unknown hosts', () => {
 		expect(parseLink('https://soundcloud.com/foo')).toBeNull();
+		expect(parseLink('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC')).toBeNull();
 		expect(parseLink('not a url')).toBeNull();
 	});
 

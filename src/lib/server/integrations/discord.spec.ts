@@ -12,7 +12,7 @@ const track = (o: Record<string, unknown> = {}) => ({
 	filePath: '/music/Disturbed/Ten Thousand Fists/09 - Decadence.flac',
 	fileSize: 30 * 1024 * 1024,
 	bitrate: 1000,
-	matchUrl: 'soulseek:peer/x.flac#1',
+	matchUrl: 'https://www.youtube.com/watch?v=x',
 	artworkUrl: 'https://example.com/cover.jpg',
 	error: null,
 	...o
@@ -29,11 +29,10 @@ describe('discord messages', () => {
 		expect(card.fields?.map((f) => `${f.name}: ${f.value}`)).toEqual([
 			'Album: Ten Thousand Fists',
 			'Format: FLAC',
-			'Size: 30.0 MB',
-			'Source: Soulseek'
+			'Size: 30.0 MB'
 		]);
 		expect(card.thumbnail?.url).toBe('https://example.com/cover.jpg');
-		expect(mp3.fields?.map((f) => f.value)).toEqual(['MP3 · 320 kbps', '30.0 MB', 'YouTube']);
+		expect(mp3.fields?.map((f) => f.value)).toEqual(['MP3 · 320 kbps', '30.0 MB']);
 	});
 
 	it('lists a large batch in one card', () => {

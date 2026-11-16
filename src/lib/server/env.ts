@@ -13,7 +13,6 @@ export const env = {
 	musicDir: process.env.MUSIC_DIR || process.env.MUSIC_LIBRARY_DIR || undefined,
 	stagingDir: process.env.STAGING_DIR || process.env.TEMP_DOWNLOAD_DIR || undefined,
 	/** Old Calliope database, offered for import on the settings page */
-	legacyDb: process.env.LEGACY_DB || undefined,
 	migrationsDir: path.resolve(process.env.CALLIOPE_MIGRATIONS_DIR || './drizzle')
 };
 

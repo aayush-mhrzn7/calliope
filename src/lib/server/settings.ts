@@ -23,17 +23,7 @@ export const SettingsSchema = z.object({
 			pathTemplate: str('{albumartist|artist}/{album|Singles}/[{track:02} - ]{title}'),
 			/** Skip tracks already present in the library index */
 			skipExisting: z.boolean().default(true),
-			/** Below this, a match is flagged low-confidence (still downloaded) */
-			lowConfidenceScore: z.number().min(0).max(1).default(0.6),
-			/** Below this, the track fails instead of downloading a likely-wrong song */
-			rejectScore: z.number().min(0).max(1).default(0.35),
 			maxAttempts: z.number().int().min(1).max(10).default(3),
-			/**
-			 * Where a track's audio is looked for first; the other source is the fallback.
-			 * 'soulseek' needs Soulseek enabled and fetches real lossless files, 'ytmusic' takes the top
-			 * YouTube Music song result, 'youtube' uses plain YouTube search only.
-			 */
-			preferredSource: z.enum(['soulseek', 'ytmusic', 'youtube']).default('ytmusic'),
 			/** Look up album, track numbers, year, genres and cover art on MusicBrainz */
 			enrichMusicBrainz: z.boolean().default(true)
 		})
@@ -55,12 +45,6 @@ export const SettingsSchema = z.object({
 			ffmpeg: str(),
 			ffprobe: str(),
 			fpcalc: str()
-		})
-		.prefault({}),
-	spotify: z
-		.object({
-			clientId: str(),
-			clientSecret: str()
 		})
 		.prefault({}),
 	lyrics: z
@@ -94,19 +78,6 @@ export const SettingsSchema = z.object({
 			apiKey: str()
 		})
 		.prefault({}),
-	soulseek: z
-		.object({
-			enabled: z.boolean().default(false),
-			username: str(),
-			password: str(),
-			/** Port other users connect to. Results and transfers work best when it is reachable. */
-			listenPort: z.number().int().min(1024).max(65535).default(2234),
-			/** Give up on a peer that keeps a download queued this long (retried later) */
-			queueTimeoutMinutes: z.number().int().min(1).max(720).default(10),
-			/** Between equally good matches, take a copy above CD quality (24-bit) over the CD rip */
-			preferHiRes: z.boolean().default(false)
-		})
-		.prefault({}),
 	library: z
 		.object({
 			scanOnStartup: z.boolean().default(true),
@@ -121,12 +92,10 @@ export type SettingsSection = keyof Settings;
 
 /** Paths into the settings object whose values never leave the server in clear text. */
 export const SECRET_FIELDS = [
-	['spotify', 'clientSecret'],
 	['navidrome', 'password'],
 	['discord', 'webhookUrl'],
 	['discord', 'botToken'],
-	['acoustid', 'apiKey'],
-	['soulseek', 'password']
+	['acoustid', 'apiKey']
 ] as const;
 export const SECRET_MASK = '••••••••';
 
@@ -148,28 +117,6 @@ function defaults(): Settings {
 	return s;
 }
 
-/** Carry choices made with older setting names over to the ones that replaced them. */
-function migrateLegacy(merged: Record<string, Record<string, unknown>>) {
-	const stored = merged.pipeline;
-	if ('preferYtMusic' in stored || 'autoLossless' in merged.soulseek) {
-		const hadChoice = stored.preferredSource !== undefined && !('preferYtMusic' in stored);
-		if (!hadChoice) {
-			// FLAC with Soulseek on used to mean "Soulseek first"; the YouTube Music switch chose the rest
-			const soulseekFirst =
-				merged.soulseek.enabled === true &&
-				merged.soulseek.autoLossless !== false &&
-				stored.formatPreset === 'flac';
-			stored.preferredSource = soulseekFirst
-				? 'soulseek'
-				: stored.preferYtMusic === false
-					? 'youtube'
-					: 'ytmusic';
-		}
-		delete stored.preferYtMusic;
-		delete merged.soulseek.autoLossless;
-	}
-}
-
 export function getSettings(): Settings {
 	if (cache) return cache;
 	const rows = db.select().from(schema.settings).all();
@@ -180,7 +127,6 @@ export function getSettings(): Settings {
 	for (const key of Object.keys(base) as SettingsSection[]) {
 		merged[key] = { ...base[key], ...((stored[key] as object) ?? {}) };
 	}
-	migrateLegacy(merged as Record<string, Record<string, unknown>>);
 	const parsed = SettingsSchema.safeParse(merged);
 	// A bad stored value (e.g. from an older version) shouldn't brick the app — fall back per field.
 	cache = absolutePaths(parsed.success ? parsed.data : base);

@@ -137,7 +137,7 @@
 		src={source.artworkUrl}
 		title={source.name}
 		size={128}
-		rounded="rounded-xl"
+		rounded="rounded-md"
 		class="shadow-2xl"
 	/>
 	<div class="min-w-0 flex-1">
@@ -159,9 +159,7 @@
 		{#if source.lastError}<p class="mt-2 text-xs text-bad">{source.lastError}</p>{/if}
 		{#if source.truncated}
 			<p class="mt-2 text-xs text-warn/90">
-				{source.provider === 'spotify'
-					? "Only the first 100 tracks could be read on the last check — Spotify's full listing was unavailable. The next check tries again."
-					: 'Only the most recent uploads are tracked for channels.'}
+				Only the most recent uploads are tracked for channels.
 			</p>
 		{/if}
 

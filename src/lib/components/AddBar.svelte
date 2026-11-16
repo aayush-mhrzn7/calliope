@@ -104,7 +104,7 @@
 			onfocus={() => (focused = true)}
 			onblur={() => (focused = false)}
 			rows={Math.min(5, Math.max(1, input.split('\n').length))}
-			placeholder="Paste Spotify or YouTube links — tracks, playlists, albums, channels…"
+			placeholder="Paste YouTube links — songs, playlists, albums, channels…"
 			class="min-h-8 flex-1 resize-none bg-transparent py-1.5 text-[13px] text-ink-50 outline-none placeholder:text-ink-400"
 		></textarea>
 		<div class="flex shrink-0 items-center gap-1.5">

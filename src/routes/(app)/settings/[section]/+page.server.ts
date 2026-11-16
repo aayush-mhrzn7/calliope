@@ -37,7 +37,6 @@ export const load = async ({ params }) => {
 						.where(isNotNull(schema.sources.formatPreset))
 						.all()
 				: [],
-		legacyDb: env.legacyDb ?? null,
 		dataDir: env.dataDir
 	};
 };

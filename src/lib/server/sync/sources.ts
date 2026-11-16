@@ -8,7 +8,6 @@ import { bus } from '../events';
 import { notifyDiscord } from '../integrations/discord';
 import { pipeline } from '../pipeline/queue';
 import { parseLink, type ParsedLink } from '../sources/parse';
-import { spotifyCollection } from '../sources/spotify';
 import type { RemoteCollection, RemoteTrack } from '../sources/types';
 import { ytChannelFeed, ytCollection } from '../sources/youtube';
 
@@ -18,14 +17,9 @@ const syncing = new Set<string>();
 // ---------------- fetching ----------------
 
 async function fetchCollection(
-	link: Pick<ParsedLink, 'provider' | 'kind' | 'id' | 'url'>,
+	link: Pick<ParsedLink, 'kind' | 'id' | 'url'>,
 	incremental = false
 ): Promise<RemoteCollection & { partial?: boolean }> {
-	if (link.provider === 'spotify') {
-		if (link.kind !== 'playlist' && link.kind !== 'album')
-			throw new Error('Not a Spotify collection');
-		return spotifyCollection(link.kind, link.id);
-	}
 	if (link.kind === 'channel') {
 		// After the first listing, poll the cheap RSS feed; it only has the latest uploads.
 		if (incremental && link.id.startsWith('UC')) {
@@ -65,7 +59,7 @@ export function resolveItemStates(
 	provider: Source['provider'],
 	items: Pick<SourceItem, 'externalId' | 'artist' | 'title'>[]
 ) {
-	const col = provider === 'spotify' ? schema.tracks.spotifyId : schema.tracks.youtubeId;
+	const col = schema.tracks.youtubeId;
 	const states = new Map<string, { state: SourceItemDTO['state']; trackId: string | null }>();
 	for (const part of chunk(items.map((i) => i.externalId))) {
 		const rows = db
@@ -310,12 +304,8 @@ function itemToTrackRow(source: Source, i: SourceItem, force: boolean) {
 	return {
 		provider: source.provider,
 		sourceId: source.id,
-		requestedUrl:
-			source.provider === 'spotify'
-				? `https://open.spotify.com/track/${i.externalId}`
-				: `https://www.youtube.com/watch?v=${i.externalId}`,
-		spotifyId: source.provider === 'spotify' ? i.externalId : null,
-		youtubeId: source.provider === 'youtube' ? i.externalId : null,
+		requestedUrl: `https://www.youtube.com/watch?v=${i.externalId}`,
+		youtubeId: i.externalId,
 		title: i.title,
 		artist: i.artist,
 		album: i.album,
@@ -335,8 +325,7 @@ export function remoteToTrackRow(
 	return {
 		provider,
 		requestedUrl,
-		spotifyId: provider === 'spotify' ? r.externalId : null,
-		youtubeId: provider === 'youtube' ? r.externalId : null,
+		youtubeId: r.externalId,
 		title: r.title,
 		artist: r.artist,
 		artists: r.artists,
@@ -462,11 +451,12 @@ export async function syncSource(id: string) {
 	if (syncing.has(id)) return { fresh: 0, queued: 0 };
 	const source = getSource(id);
 	if (!source) throw new Error('Source not found');
+	if (source.provider !== 'youtube') throw new Error('Spotify sources are no longer supported');
 	syncing.add(id);
 	emitSource(id);
 	try {
 		const listing = await fetchCollection(
-			{ provider: source.provider, kind: source.kind, id: source.externalId, url: source.url },
+			{ kind: source.kind, id: source.externalId, url: source.url },
 			source.kind === 'channel'
 		);
 		return await applyListing(id, listing);
@@ -511,7 +501,7 @@ async function schedulerTick() {
 			)
 			.orderBy(asc(schema.sources.nextCheckAt))
 			.all();
-		// One at a time: gentle on Spotify/YouTube and keeps yt-dlp spawns bounded.
+		// One at a time: gentle on YouTube and keeps yt-dlp spawns bounded.
 		for (const s of due)
 			await syncSource(s.id).catch((err) => console.warn(`[sync] ${s.id}:`, err.message));
 	} finally {

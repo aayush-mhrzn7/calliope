@@ -5,7 +5,6 @@
 		CircleAlert,
 		CircleCheck,
 		Cpu,
-		Download,
 		FolderTree,
 		KeyRound,
 		LoaderCircle,
@@ -114,7 +113,7 @@
 	// --- integration tests ------------------------------------------------------------
 	let testing = $state<string | null>(null);
 	let testResult = $state<Record<string, { ok: boolean; message: string }>>({});
-	async function test(target: 'spotify' | 'navidrome' | 'discord' | 'soulseek') {
+	async function test(target: 'navidrome' | 'discord') {
 		if (dirty) await save();
 		testing = target;
 		try {
@@ -159,28 +158,6 @@
 			title: 'Password changed',
 			message: 'Other sessions were signed out.'
 		});
-	}
-
-	let legacyPath = $state('');
-	$effect.pre(() => {
-		legacyPath = data.legacyDb ?? '';
-	});
-	let importing = $state(false);
-	async function runImport() {
-		importing = true;
-		try {
-			const r = await api.post<{ sources: number; skippedSources: number; tracks: number }>(
-				'/api/settings/import',
-				{ path: legacyPath }
-			);
-			toasts.push({
-				level: 'success',
-				title: 'Import complete',
-				message: `${r.sources} sources (${r.skippedSources} skipped), ${r.tracks} download records`
-			});
-		} finally {
-			importing = false;
-		}
 	}
 
 	const SPONSOR_CATEGORIES = [
@@ -323,8 +300,8 @@
 				<div class="grid gap-2 py-3.5 sm:grid-cols-2 xl:grid-cols-3">
 					{#each Object.entries(FORMAT_PRESETS) as [id, p] (id)}
 						<button
-							class="rounded-xl border p-3 text-left transition {draft.pipeline.formatPreset === id
-								? 'border-amber/50 bg-amber/10 shadow-[0_0_24px_-10px_rgb(245_165_36/0.8)]'
+							class="rounded-md border p-3 text-left transition {draft.pipeline.formatPreset === id
+								? 'border-amber bg-amber/5'
 								: 'border-white/8 bg-white/[0.02] hover:border-white/15'}"
 							onclick={() =>
 								(draft.pipeline.formatPreset = id as typeof draft.pipeline.formatPreset)}
@@ -352,24 +329,15 @@
 							>{/each}. Set a source's format to Default to follow this setting.
 					</p>
 				{/if}
-				{#if draft.soulseek.enabled && draft.pipeline.preferredSource === 'soulseek'}
-					<p class="pb-3 text-xs text-ink-300">
-						Files found on Soulseek keep their own lossless format whatever is chosen here. This
-						format is used for tracks that fall back to YouTube{draft.pipeline.formatPreset ===
-						'flac'
-							? ', whose audio is lossy — FLAC only makes those files larger'
-							: ''}.
-					</p>
-				{:else if draft.pipeline.formatPreset === 'flac'}
+				{#if draft.pipeline.formatPreset === 'flac'}
 					<p class="pb-3 text-xs text-warn/90">
 						YouTube audio is lossy (Opus/AAC ~128–160 kbps). FLAC preserves it exactly but can't add
-						quality back — files are just larger. For real lossless files, enable Soulseek and make
-						it the preferred source below.
+						quality back — files are just larger. Opus keeps YouTube's audio without re-encoding.
 					</p>
 				{/if}
 			</Section>
 
-			<Section title="Workers & matching">
+			<Section title="Workers">
 				<Field
 					row
 					label="Parallel downloads"
@@ -388,27 +356,6 @@
 				</Field>
 				<Field
 					row
-					label="Preferred source"
-					hint={draft.pipeline.preferredSource === 'soulseek'
-						? draft.soulseek.enabled
-							? 'Look for a real lossless (FLAC) copy on Soulseek first. Tracks it cannot find come from YouTube in the output format above.'
-							: 'Soulseek is turned off under Integrations, so tracks come from YouTube until it is enabled.'
-						: `${
-								draft.pipeline.preferredSource === 'ytmusic'
-									? 'Take the top YouTube Music song result first — usually the official audio.'
-									: 'Use plain YouTube search only.'
-							}${draft.soulseek.enabled ? ' Tracks YouTube cannot deliver are looked up on Soulseek.' : ''}`}
-				>
-					<select class="input !w-44" bind:value={draft.pipeline.preferredSource}>
-						<option value="soulseek"
-							>Soulseek{draft.soulseek.enabled ? '' : ' (not enabled)'}</option
-						>
-						<option value="ytmusic">YouTube Music</option>
-						<option value="youtube">YouTube search</option>
-					</select>
-				</Field>
-				<Field
-					row
 					label="Enrich from MusicBrainz"
 					hint="Look up the studio album, track numbers, original year, genres and album cover art for each download. YouTube uploads otherwise only carry the video's thumbnail."
 				>
@@ -420,44 +367,6 @@
 					hint="Matches by artist + title against the library index."
 				>
 					<Switch bind:checked={draft.pipeline.skipExisting} label="Skip existing" />
-				</Field>
-				<Field
-					row
-					label="Low-confidence threshold"
-					hint="Matches below this still download but are flagged “Check match”."
-				>
-					<div class="flex items-center gap-3">
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.05"
-							class="w-32 accent-amber"
-							bind:value={draft.pipeline.lowConfidenceScore}
-						/>
-						<span class="w-9 font-mono text-sm"
-							>{Math.round(draft.pipeline.lowConfidenceScore * 100)}%</span
-						>
-					</div>
-				</Field>
-				<Field
-					row
-					label="Reject threshold"
-					hint="Matches below this fail instead of downloading a probably-wrong song."
-				>
-					<div class="flex items-center gap-3">
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.05"
-							class="w-32 accent-amber"
-							bind:value={draft.pipeline.rejectScore}
-						/>
-						<span class="w-9 font-mono text-sm"
-							>{Math.round(draft.pipeline.rejectScore * 100)}%</span
-						>
-					</div>
 				</Field>
 				<Field
 					row
@@ -646,36 +555,6 @@
 			</Section>
 		{:else if data.section === 'integrations'}
 			<Section
-				title="Spotify Web API"
-				description="Optional. Public playlists are read in full without it. With credentials, album and track lookups gain album names, track numbers and release dates."
-			>
-				{#snippet actions()}
-					<button
-						class="btn btn-sm"
-						onclick={() => test('spotify')}
-						disabled={testing === 'spotify' || !draft.spotify.clientId}
-					>
-						{#if testing === 'spotify'}<LoaderCircle class="h-3 w-3 animate-spin" />{/if} Test
-					</button>
-				{/snippet}
-				<Field label="Client ID"
-					><input class="input font-mono" bind:value={draft.spotify.clientId} /></Field
-				>
-				<Field label="Client secret"
-					><input
-						class="input font-mono"
-						type="password"
-						bind:value={draft.spotify.clientSecret}
-					/></Field
-				>
-				{#if testResult.spotify}<p
-						class="py-2 text-xs {testResult.spotify.ok ? 'text-ok' : 'text-bad'}"
-					>
-						{testResult.spotify.message}
-					</p>{/if}
-			</Section>
-
-			<Section
 				title="Navidrome"
 				description="Trigger a library rescan shortly after downloads finish and after files are retagged, moved or removed."
 			>
@@ -724,78 +603,6 @@
 						class="py-2 text-xs {testResult.navidrome.ok ? 'text-ok' : 'text-bad'}"
 					>
 						{testResult.navidrome.message}
-					</p>{/if}
-			</Section>
-
-			<Section
-				title="Soulseek"
-				description="Search the Soulseek network and download files in their original format, such as real FLAC. Calliope signs in with its own built-in client, so use an account no other Soulseek app is signed in to — one account can only be online in one place."
-			>
-				{#snippet actions()}
-					<button
-						class="btn btn-sm"
-						onclick={() => test('soulseek')}
-						disabled={testing === 'soulseek' || !draft.soulseek.enabled || !draft.soulseek.username}
-					>
-						{#if testing === 'soulseek'}<LoaderCircle class="h-3 w-3 animate-spin" />{/if} Test
-					</button>
-				{/snippet}
-				<Field row label="Enabled"
-					><Switch bind:checked={draft.soulseek.enabled} label="Soulseek" /></Field
-				>
-				<div class="grid gap-x-4 sm:grid-cols-2">
-					<Field label="Username"
-						><input class="input" autocomplete="off" bind:value={draft.soulseek.username} /></Field
-					>
-					<Field label="Password"
-						><input
-							class="input"
-							type="password"
-							autocomplete="new-password"
-							bind:value={draft.soulseek.password}
-						/></Field
-					>
-				</div>
-				<Field
-					row
-					label="Listening port"
-					hint="Other users connect here to answer searches and send files. Works without it, but forwarding this TCP port on your router (and publishing it in Docker) gives more results."
-				>
-					<input
-						type="number"
-						min="1024"
-						max="65535"
-						class="input !w-24 text-right font-mono"
-						bind:value={draft.soulseek.listenPort}
-					/>
-				</Field>
-				<Field
-					row
-					label="Wait for a queued download"
-					hint="Busy peers put you in a queue. After this long without the transfer starting, the download is dropped and retried later."
-				>
-					<div class="flex items-center gap-2">
-						<input
-							type="number"
-							min="1"
-							max="720"
-							class="input !w-20 text-right font-mono"
-							bind:value={draft.soulseek.queueTimeoutMinutes}
-						/>
-						<span class="text-xs text-ink-400">min</span>
-					</div>
-				</Field>
-				<Field
-					row
-					label="Prefer hi-res"
-					hint="When several peers share the same track, take a 24-bit or high sample rate copy over the CD rip. Most music only exists in CD quality (16-bit / 44.1 kHz), and hi-res files are several times larger."
-				>
-					<Switch bind:checked={draft.soulseek.preferHiRes} label="Prefer hi-res" />
-				</Field>
-				{#if testResult.soulseek}<p
-						class="py-2 text-xs {testResult.soulseek.ok ? 'text-ok' : 'text-bad'}"
-					>
-						{testResult.soulseek.message}
 					</p>{/if}
 			</Section>
 
@@ -901,31 +708,6 @@
 						>Change password</button
 					>
 				</div>
-			</Section>
-
-			<Section
-				title="Import from Calliope v1"
-				description="Brings over monitored playlists and finished download history, so monitors don't re-download what you already have. Safe to run more than once."
-			>
-				<Field
-					label="Path to calliope.db"
-					hint={data.legacyDb
-						? 'Pre-filled from LEGACY_DB.'
-						: 'Mount the old data volume and point here, e.g. /legacy/calliope.db'}
-				>
-					<div class="flex gap-2">
-						<input
-							class="input font-mono"
-							bind:value={legacyPath}
-							placeholder="/legacy/calliope.db"
-						/>
-						<button class="btn shrink-0" onclick={runImport} disabled={!legacyPath || importing}>
-							{#if importing}<LoaderCircle class="h-3.5 w-3.5 animate-spin" />{:else}<Download
-									class="h-3.5 w-3.5"
-								/>{/if} Import
-						</button>
-					</div>
-				</Field>
 			</Section>
 
 			<Section title="Data">

@@ -8,7 +8,6 @@
 		ListMusic,
 		LogOut,
 		Radio,
-		Search,
 		Settings2,
 		WandSparkles
 	} from '@lucide/svelte';
@@ -35,8 +34,7 @@
 					icon: Radio,
 					badge: live.sources.size,
 					live: [...live.sources.values()].some((s) => s.syncing)
-				},
-				{ href: '/soulseek', label: 'Soulseek', icon: Search, badge: 0, live: false }
+				}
 			]
 		},
 		{
@@ -67,15 +65,8 @@
 
 <nav class="flex h-full flex-col">
 	<a href="/pipeline" class="group flex items-center gap-2.5 px-5 pt-5 pb-6" onclick={onnavigate}>
-		<div
-			class="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber to-violet shadow-[0_0_24px_-4px_rgb(245_165_36/0.5)]"
-		>
-			<AudioWaveform class="h-4.5 w-4.5 text-ink-950" strokeWidth={2.5} />
-		</div>
-		<div>
-			<div class="text-[15px] leading-none font-semibold tracking-tight text-ink-50">Calliope</div>
-			<div class="mt-1 text-[10px] tracking-[0.18em] text-ink-400 uppercase">Music harvester</div>
-		</div>
+		<AudioWaveform class="h-5 w-5 text-amber" strokeWidth={2.25} />
+		<div class="text-[15px] leading-none font-semibold tracking-tight text-ink-50">Calliope</div>
 	</a>
 
 	<div class="flex-1 space-y-6 overflow-y-auto px-3">
@@ -87,12 +78,10 @@
 					<a
 						href={item.href}
 						onclick={onnavigate}
-						class="group relative mb-0.5 flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition
-							{active ? 'bg-white/[0.07] text-ink-50' : 'text-ink-300 hover:bg-white/[0.04] hover:text-ink-100'}"
+						class="group relative mb-0.5 flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition
+							{active ? 'bg-ink-800 text-ink-50' : 'text-ink-300 hover:bg-ink-850 hover:text-ink-100'}"
 					>
-						{#if active}<span
-								class="absolute top-2 bottom-2 -left-3 w-[3px] rounded-r bg-gradient-to-b from-amber to-violet"
-							></span>{/if}
+						{#if active}<span class="absolute top-2 bottom-2 -left-3 w-[2px] bg-amber"></span>{/if}
 						<item.icon
 							class="h-4 w-4 {active ? 'text-amber' : 'text-ink-400 group-hover:text-ink-200'}"
 						/>
@@ -100,8 +89,8 @@
 						{#if item.badge}
 							<span
 								class="rounded-md px-1.5 py-0.5 font-mono text-[10px] {item.live
-									? 'bg-amber/15 text-amber-glow'
-									: 'bg-white/[0.05] text-ink-400'}">{item.badge.toLocaleString()}</span
+									? 'text-amber'
+									: 'text-ink-500'}">{item.badge.toLocaleString()}</span
 							>
 						{/if}
 					</a>
@@ -110,14 +99,10 @@
 		{/each}
 	</div>
 
-	<div class="m-3 rounded-xl border border-white/6 bg-white/[0.02] p-3">
+	<div class="m-3 border-t border-ink-800 px-2 pt-3 pb-1">
 		<div class="flex items-center justify-between text-[11px] text-ink-400">
 			<span class="flex items-center gap-1.5">
-				<span
-					class="h-1.5 w-1.5 rounded-full {live.connected
-						? 'bg-ok shadow-[0_0_6px] shadow-ok'
-						: 'bg-bad'}"
-				></span>
+				<span class="h-1.5 w-1.5 rounded-full {live.connected ? 'bg-ok' : 'bg-bad'}"></span>
 				{live.connected ? (t?.paused ? 'Paused' : 'Live') : 'Reconnecting…'}
 			</span>
 			<button class="btn btn-ghost btn-icon btn-sm" onclick={logout} title="Sign out"
@@ -127,11 +112,7 @@
 		{#if t}
 			<div class="mt-2 flex gap-1" title="Worker slots">
 				{#each Array(t.concurrency) as _, i (i)}
-					<div
-						class="h-1.5 flex-1 rounded-full {i < t.counts.active
-							? 'bg-gradient-to-r from-amber to-amber-glow shadow-[0_0_6px] shadow-amber/60'
-							: 'bg-white/[0.07]'}"
-					></div>
+					<div class="h-1 flex-1 {i < t.counts.active ? 'bg-amber' : 'bg-ink-700'}"></div>
 				{/each}
 			</div>
 			<div class="mt-1.5 flex justify-between font-mono text-[10px] text-ink-400">

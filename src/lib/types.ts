@@ -35,14 +35,25 @@ export interface TrackDTO {
 	finishedAt: number | null;
 }
 
-export interface SoulseekStatus {
-	enabled: boolean;
-	/** Username and password are filled in */
-	configured: boolean;
-	state: 'offline' | 'connecting' | 'online';
-	username: string;
-	listenPort: number;
-	error: string | null;
+export interface StatBucket {
+	done: number;
+	failed: number;
+	skipped: number;
+	/** Bytes written by completed downloads */
+	bytes: number;
+}
+
+export interface PipelineStats {
+	/** Start of the first day bucket (local midnight, ms) */
+	since: number;
+	todayStart: number;
+	/** Start of the first hour bucket (ms) */
+	hourStart: number;
+	/** One bucket per local day, oldest first, ending today */
+	days: StatBucket[];
+	/** One bucket per hour for the last 24 hours, oldest first */
+	hours: StatBucket[];
+	today: StatBucket;
 }
 
 export interface SourceDTO {

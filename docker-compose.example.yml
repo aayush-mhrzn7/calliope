@@ -4,23 +4,15 @@ services:
     container_name: calliope
     ports:
       - '7200:7200'
-      # Optional: lets Soulseek peers reach Calliope (more search results, faster transfers).
-      # Must match the listening port in Settings › Integrations; forward it on your router too.
-      # - '2234:2234'
     environment:
       # First-boot password (skips the setup screen). Change it later in Settings › Account.
       CALLIOPE_PASSWORD: change-me
-      # Optional: path to the old Calliope v1 database, imported from Settings › Account.
-      # LEGACY_DB: /legacy/calliope.db
       TZ: Etc/UTC
     volumes:
-      - calliope-v2-data:/data # database, staging, quarantine (kept separate from the v1 volume)
+      - calliope-v2-data:/data # database, staging, quarantine
       - /path/to/Music:/music # your library (read/write)
-      # - calliope-data:/legacy:ro             # old Calliope v1 volume, for the one-time import
       # - /path/to/cookies.txt:/config/cookies.txt:ro
     restart: unless-stopped
 
 volumes:
   calliope-v2-data:
-  # calliope-data:        # the v1 volume (uncomment with the /legacy mount above)
-  #   external: true

@@ -118,7 +118,7 @@
 				src={d.hasArtwork ? `/api/library/${d.id}/art` : null}
 				title={d.album ?? d.title}
 				size={368}
-				rounded="rounded-xl"
+				rounded="rounded-md"
 				class="aspect-square !h-auto !w-full"
 			/>
 			<h2 class="mt-4 text-lg leading-tight font-semibold text-ink-50">{d.title ?? '—'}</h2>

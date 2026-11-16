@@ -31,7 +31,7 @@
 
 <button
 	transition:fade={{ duration: 120 }}
-	class="fixed inset-0 z-50 cursor-default bg-black/60 backdrop-blur-sm"
+	class="fixed inset-0 z-50 cursor-default bg-black/80"
 	onclick={onclose}
 	aria-label="Close"
 ></button>

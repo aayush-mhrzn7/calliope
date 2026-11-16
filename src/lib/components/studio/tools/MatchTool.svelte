@@ -453,7 +453,7 @@
 	<div use:portal>
 		<button
 			transition:fade={{ duration: 120 }}
-			class="fixed inset-0 z-50 cursor-zoom-out bg-black/75 backdrop-blur-sm"
+			class="fixed inset-0 z-50 cursor-zoom-out bg-black/90"
 			onclick={() => (preview = null)}
 			aria-label="Close preview"
 		></button>
@@ -462,7 +462,7 @@
 			class="pointer-events-none fixed top-1/2 left-1/2 z-50 flex w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-3"
 		>
 			<div
-				class="pointer-events-auto relative aspect-square max-h-[75vh] w-full overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-2xl"
+				class="pointer-events-auto relative aspect-square max-h-[75vh] w-full overflow-hidden rounded-md border border-white/10 bg-ink-900 shadow-2xl"
 			>
 				<!-- Thumbnail shows instantly, full-size image fades in over it -->
 				<img

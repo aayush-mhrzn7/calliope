@@ -18,6 +18,8 @@ interface ActiveJob {
 	controller: AbortController;
 	telemetry: WorkerTelemetry;
 	log: string[];
+	/** Bytes of the current file already counted towards throughput */
+	counted: number;
 }
 
 class Pipeline {
@@ -119,7 +121,8 @@ class Pipeline {
 				downloaded: null,
 				total: null
 			},
-			log: []
+			log: [],
+			counted: 0
 		};
 		this.active.set(track.id, job);
 		bus.emit('track', toTrackDTO(track));
@@ -143,6 +146,12 @@ class Pipeline {
 				patchTrack(track.id, { status });
 			},
 			progress: (p: DownloadProgress) => {
+				if (p.downloaded != null) {
+					// A smaller count means yt-dlp started another file (e.g. a second stream)
+					if (p.downloaded < job.counted) job.counted = 0;
+					this.bytesSinceSample += p.downloaded - job.counted;
+					job.counted = p.downloaded;
+				}
 				job.telemetry = {
 					...job.telemetry,
 					percent: p.percent,
@@ -381,7 +390,7 @@ class Pipeline {
 			ts: Date.now(),
 			paused: this.paused,
 			concurrency: getSettings().pipeline.concurrency,
-			speed: workers.reduce((sum, w) => sum + (w.stage === 'downloading' ? (w.speed ?? 0) : 0), 0),
+			speed: this.speed,
 			workers,
 			counts: {
 				queued: by.queued ?? 0,
@@ -395,10 +404,31 @@ class Pipeline {
 	}
 
 	private lastIdleEmit = 0;
+	/** Bytes downloaded since the last throughput sample, across all workers */
+	private bytesSinceSample = 0;
+	private lastSample = Date.now();
+	/** Measured download rate (bytes/sec) over the last sample window */
+	private speed = 0;
+
+	/**
+	 * Throughput from the bytes that actually arrived, not yt-dlp's speed readout: a song often
+	 * downloads in about a second and then spends longer converting and tagging, so a once-a-second
+	 * look at the readout mostly sees nothing.
+	 */
+	private sampleSpeed(now: number) {
+		const elapsed = now - this.lastSample;
+		if (elapsed < 500) return;
+		this.speed = Math.round((this.bytesSinceSample / elapsed) * 1000);
+		this.bytesSinceSample = 0;
+		this.lastSample = now;
+	}
+
 	private emitTelemetry(force = false) {
 		// Every second while busy; every 10s when idle (keeps counters fresh without chatter).
 		const now = Date.now();
-		if (!force && !this.active.size && now - this.lastIdleEmit < 10_000) return;
+		if (!force) this.sampleSpeed(now);
+		// (a download that just ended still reports its last second of throughput)
+		if (!force && !this.active.size && !this.speed && now - this.lastIdleEmit < 10_000) return;
 		if (!this.active.size) this.lastIdleEmit = now;
 		bus.emit('telemetry', this.telemetry());
 	}

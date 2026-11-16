@@ -15,13 +15,17 @@
 	import { api } from '$lib/client/api';
 	import { rate } from '$lib/client/format';
 	import { live } from '$lib/client/live.svelte';
+	import { player } from '$lib/client/player.svelte';
 	import { ACTIVE_STATUSES, FINISHED_STATUSES } from '$lib/status';
 	import AddBar from '$lib/components/AddBar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import FinishedFeed from '$lib/components/pipeline/FinishedFeed.svelte';
 	import QueueList from '$lib/components/pipeline/QueueList.svelte';
 	import WorkerCard from '$lib/components/pipeline/WorkerCard.svelte';
-	import SpeedChart from '$lib/components/SpeedChart.svelte';
+	import DotArea from '$lib/components/charts/DotArea.svelte';
+	import PipelineHistory from '$lib/components/charts/PipelineHistory.svelte';
+	import YearHeatmap from '$lib/components/charts/YearHeatmap.svelte';
+	import { DM } from '$lib/client/dotmatrix';
 
 	let { data } = $props();
 
@@ -65,140 +69,167 @@
 
 <svelte:head><title>Pipeline · Calliope</title></svelte:head>
 
-<header class="flex flex-wrap items-end justify-between gap-3 pt-6 pb-4">
-	<div>
-		<h1 class="text-2xl font-semibold tracking-tight text-ink-50">Pipeline</h1>
-		<p class="mt-1 text-sm text-ink-400">
-			Live download queue: match, fetch, tag and file into your library.
-		</p>
-	</div>
-	<div class="flex items-center gap-2">
-		{#if t.counts.failed}
-			<button class="btn" onclick={() => control('retryFailed')}
-				><RotateCcw class="h-3.5 w-3.5" /> Retry {t.counts.failed} failed</button
-			>
-		{/if}
-		{#if t.paused}
-			<button class="btn btn-primary" onclick={() => control('resume')}
-				><Play class="h-3.5 w-3.5" /> Resume</button
-			>
-		{:else}
-			<button class="btn" onclick={() => control('pause')}
-				><Pause class="h-3.5 w-3.5" /> Pause</button
-			>
-		{/if}
-		<div class="relative">
-			<button class="btn btn-icon" onclick={() => (menu = !menu)} aria-label="More actions"
-				><Ellipsis class="h-4 w-4" /></button
-			>
-			{#if menu}
-				<button
-					class="fixed inset-0 z-10 cursor-default"
-					onclick={() => (menu = false)}
-					aria-label="Close menu"
-				></button>
-				<div class="glass absolute right-0 z-20 mt-1 w-56 !bg-ink-850/95 p-1 text-[13px]">
-					<button
-						class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
-						onclick={() => control('clear', { statuses: ['done'] })}
-					>
-						<CircleCheck class="h-3.5 w-3.5 text-ink-400" /> Clear completed
-					</button>
-					<button
-						class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
-						onclick={() => control('clear', { statuses: ['skipped', 'cancelled'] })}
-					>
-						<Trash2 class="h-3.5 w-3.5 text-ink-400" /> Clear skipped & cancelled
-					</button>
-					<button
-						class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
-						onclick={() => control('clear', { statuses: ['failed'] })}
-					>
-						<Trash2 class="h-3.5 w-3.5 text-ink-400" /> Clear failed
-					</button>
-					<div class="my-1 h-px bg-white/5"></div>
-					<button
-						class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-bad hover:bg-bad/10"
-						onclick={() => control('cancelQueued')}
-					>
-						<XCircle class="h-3.5 w-3.5" /> Cancel everything queued
-					</button>
-				</div>
+<!-- On wide screens the page fits the window and each list scrolls inside its own panel -->
+<div
+	class="flex flex-col xl:[&>*]:shrink-0 {player.current
+		? 'xl:h-[calc(100dvh-7rem)]'
+		: 'xl:h-[calc(100dvh-2.5rem)]'}"
+>
+	<header class="flex flex-wrap items-end justify-between gap-3 pt-6 pb-4">
+		<div>
+			<h1 class="text-2xl font-semibold tracking-tight text-ink-50">Pipeline</h1>
+			<p class="mt-1 text-sm text-ink-400">
+				Live download queue: match, fetch, tag and file into your library.
+			</p>
+		</div>
+		<div class="flex items-center gap-2">
+			{#if t.counts.failed}
+				<button class="btn" onclick={() => control('retryFailed')}
+					><RotateCcw class="h-3.5 w-3.5" /> Retry {t.counts.failed} failed</button
+				>
 			{/if}
-		</div>
-	</div>
-</header>
-
-<AddBar />
-
-<!-- Telemetry strip -->
-<section class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-	<div class="glass col-span-2 overflow-hidden p-0 md:col-span-4 xl:col-span-3">
-		<div class="flex items-baseline justify-between px-4 pt-3">
-			<span class="panel-title flex items-center gap-1.5"
-				><Activity class="h-3 w-3" /> Throughput</span
-			>
-			<span class="font-mono text-lg font-medium text-amber-glow">{rate(t.speed)}</span>
-		</div>
-		<SpeedChart samples={live.speedHistory} />
-	</div>
-	{#each [{ label: 'Workers', value: `${t.counts.active}/${t.concurrency}`, icon: Cpu, tone: t.counts.active ? 'text-amber-glow' : 'text-ink-100' }, { label: 'Up next', value: t.counts.queued.toLocaleString(), icon: ListOrdered, tone: 'text-violet-glow' }, { label: 'Today', value: t.doneToday.toLocaleString(), icon: CircleCheck, tone: 'text-ok', sub: t.counts.failed ? `${t.counts.failed} failed` : `${t.counts.done.toLocaleString()} all-time` }] as s (s.label)}
-		<div class="glass flex flex-col justify-between p-4">
-			<span class="panel-title flex items-center gap-1.5"><s.icon class="h-3 w-3" /> {s.label}</span
-			>
-			<div class="mt-3 font-mono text-2xl font-medium {s.tone}">{s.value}</div>
-			{#if s.sub}<div class="mt-0.5 text-[11px] text-ink-400">{s.sub}</div>{/if}
-		</div>
-	{/each}
-</section>
-
-<div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
-	<div class="min-w-0 space-y-4">
-		<section class="glass p-3">
-			<div class="mb-3 flex items-center justify-between px-1">
-				<h2 class="panel-title">Active downloads</h2>
-				{#if t.paused}<span class="chip border-warn/30 bg-warn/10 text-warn">Paused</span>{/if}
+			{#if t.paused}
+				<button class="btn btn-primary" onclick={() => control('resume')}
+					><Play class="h-3.5 w-3.5" /> Resume</button
+				>
+			{:else}
+				<button class="btn" onclick={() => control('pause')}
+					><Pause class="h-3.5 w-3.5" /> Pause</button
+				>
+			{/if}
+			<div class="relative">
+				<button class="btn btn-icon" onclick={() => (menu = !menu)} aria-label="More actions"
+					><Ellipsis class="h-4 w-4" /></button
+				>
+				{#if menu}
+					<button
+						class="fixed inset-0 z-10 cursor-default"
+						onclick={() => (menu = false)}
+						aria-label="Close menu"
+					></button>
+					<div class="glass absolute right-0 z-20 mt-1 w-56 !bg-ink-850/95 p-1 text-[13px]">
+						<button
+							class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
+							onclick={() => control('clear', { statuses: ['done'] })}
+						>
+							<CircleCheck class="h-3.5 w-3.5 text-ink-400" /> Clear completed
+						</button>
+						<button
+							class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
+							onclick={() => control('clear', { statuses: ['skipped', 'cancelled'] })}
+						>
+							<Trash2 class="h-3.5 w-3.5 text-ink-400" /> Clear skipped & cancelled
+						</button>
+						<button
+							class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-white/5"
+							onclick={() => control('clear', { statuses: ['failed'] })}
+						>
+							<Trash2 class="h-3.5 w-3.5 text-ink-400" /> Clear failed
+						</button>
+						<div class="my-1 h-px bg-white/5"></div>
+						<button
+							class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-bad hover:bg-bad/10"
+							onclick={() => control('cancelQueued')}
+						>
+							<XCircle class="h-3.5 w-3.5" /> Cancel everything queued
+						</button>
+					</div>
+				{/if}
 			</div>
-			{#if active.length}
-				<div class="space-y-2">
-					{#each active as track (track.id)}
-						<WorkerCard {track} telemetry={workerTelemetry.get(track.id)} />
+		</div>
+	</header>
+
+	<AddBar />
+
+	<!-- Telemetry strip -->
+	<section class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+		<div class="glass col-span-2 overflow-hidden p-0 md:col-span-4 xl:col-span-3">
+			<div class="flex items-baseline justify-between px-4 pt-3">
+				<span class="panel-title flex items-center gap-1.5"
+					><Activity class="h-3 w-3" /> Throughput</span
+				>
+				<span class="font-mono text-lg font-medium text-amber-glow">{rate(t.speed)}</span>
+			</div>
+			<div class="px-4 pt-2 pb-3">
+				<DotArea
+					height={60}
+					label="Download speed over the last two minutes"
+					series={[{ color: DM.green, values: live.speedHistory }]}
+					xLabels={['2 MIN AGO', '1 MIN', 'NOW']}
+					formatPeak={rate}
+					minPeak={256 * 1024}
+				/>
+			</div>
+		</div>
+		{#each [{ label: 'Workers', value: `${t.counts.active}/${t.concurrency}`, icon: Cpu, tone: t.counts.active ? 'text-amber-glow' : 'text-ink-100' }, { label: 'Up next', value: t.counts.queued.toLocaleString(), icon: ListOrdered, tone: 'text-violet-glow' }, { label: 'Today', value: t.doneToday.toLocaleString(), icon: CircleCheck, tone: 'text-ok', sub: t.counts.failed ? `${t.counts.failed} failed` : `${t.counts.done.toLocaleString()} all-time` }] as s (s.label)}
+			<div class="glass flex flex-col justify-between p-4">
+				<span class="panel-title flex items-center gap-1.5"
+					><s.icon class="h-3 w-3" /> {s.label}</span
+				>
+				<div class="mt-3 font-mono text-2xl font-medium {s.tone}">{s.value}</div>
+				{#if s.sub}<div class="mt-0.5 text-[11px] text-ink-400">{s.sub}</div>{/if}
+			</div>
+		{/each}
+	</section>
+
+	<PipelineHistory />
+
+	<div
+		class="mt-4 grid gap-4 xl:min-h-[380px] xl:flex-1 xl:!shrink xl:grid-cols-[minmax(0,1fr)_400px]"
+	>
+		<div class="flex min-w-0 flex-col gap-4 xl:min-h-0">
+			<div class="shrink-0"><YearHeatmap /></div>
+
+			<section class="glass flex shrink-0 flex-col p-3 xl:max-h-[45%] xl:min-h-0">
+				<div class="mb-3 flex items-center justify-between px-1">
+					<h2 class="panel-title">Active downloads</h2>
+					{#if t.paused}<span class="chip border-warn/30 bg-warn/10 text-warn">Paused</span>{/if}
+				</div>
+				{#if active.length}
+					<div class="min-h-0 space-y-2 overflow-y-auto">
+						{#each active as track (track.id)}
+							<WorkerCard {track} telemetry={workerTelemetry.get(track.id)} />
+						{/each}
+					</div>
+				{:else}
+					<EmptyState icon={Cpu} title={t.paused ? 'Pipeline paused' : 'All workers idle'}>
+						{t.paused
+							? 'Resume to start processing the queue.'
+							: 'Workers pick up queued tracks automatically.'}
+					</EmptyState>
+				{/if}
+			</section>
+
+			<section class="glass flex flex-col overflow-hidden xl:min-h-[140px] xl:flex-1">
+				<div class="flex shrink-0 items-center justify-between px-4 pt-3 pb-2">
+					<h2 class="panel-title">Up next</h2>
+					<span class="text-[11px] text-ink-500">Drag to reorder</span>
+				</div>
+				<div class="min-h-0 flex-1 overflow-y-auto">
+					<QueueList items={queued} total={Math.max(t.counts.queued, queued.length)} />
+				</div>
+			</section>
+		</div>
+
+		<section class="glass flex flex-col overflow-hidden xl:min-h-0">
+			<div
+				class="flex shrink-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2.5"
+			>
+				<h2 class="panel-title pl-1">Recent</h2>
+				<div class="flex rounded-lg border border-white/6 bg-ink-900/60 p-0.5 text-[11px]">
+					{#each ['all', 'done', 'failed', 'skipped'] as const as key (key)}
+						<button
+							class="rounded-md px-2 py-1 capitalize transition {tab === key
+								? 'bg-white/10 text-ink-50'
+								: 'text-ink-400 hover:text-ink-200'}"
+							onclick={() => (tab = key)}>{key}</button
+						>
 					{/each}
 				</div>
-			{:else}
-				<EmptyState icon={Cpu} title={t.paused ? 'Pipeline paused' : 'All workers idle'}>
-					{t.paused
-						? 'Resume to start processing the queue.'
-						: 'Workers pick up queued tracks automatically.'}
-				</EmptyState>
-			{/if}
-		</section>
-
-		<section class="glass overflow-hidden">
-			<div class="flex items-center justify-between px-4 pt-3 pb-2">
-				<h2 class="panel-title">Up next</h2>
-				<span class="text-[11px] text-ink-500">Drag to reorder</span>
 			</div>
-			<QueueList items={queued} total={Math.max(t.counts.queued, queued.length)} />
+			<div class="max-h-[70dvh] min-h-0 flex-1 overflow-y-auto xl:max-h-none">
+				<FinishedFeed items={finished} />
+			</div>
 		</section>
 	</div>
-
-	<section class="glass h-fit overflow-hidden xl:sticky xl:top-3">
-		<div class="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-2.5">
-			<h2 class="panel-title pl-1">Recent</h2>
-			<div class="flex rounded-lg border border-white/6 bg-ink-900/60 p-0.5 text-[11px]">
-				{#each ['all', 'done', 'failed', 'skipped'] as const as key (key)}
-					<button
-						class="rounded-md px-2 py-1 capitalize transition {tab === key
-							? 'bg-white/10 text-ink-50'
-							: 'text-ink-400 hover:text-ink-200'}"
-						onclick={() => (tab = key)}>{key}</button
-					>
-				{/each}
-			</div>
-		</div>
-		<div class="max-h-[calc(100dvh-140px)] overflow-y-auto">
-			<FinishedFeed items={finished} lowConfidence={data.lowConfidence} />
-		</div>
-	</section>
 </div>

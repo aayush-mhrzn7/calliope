@@ -19,27 +19,23 @@ async function load(name: string, rows: Record<string, object>) {
 }
 
 describe('settings from older versions', () => {
-	it('FLAC with Soulseek enabled becomes "Soulseek first"', async () => {
+	it('drops removed options (Spotify, Soulseek, match thresholds) and keeps the rest', async () => {
 		const s = await load('a', {
-			pipeline: { formatPreset: 'flac', preferYtMusic: false },
+			pipeline: {
+				formatPreset: 'opus',
+				concurrency: 3,
+				preferredSource: 'ytmusic',
+				preferYtMusic: true,
+				lowConfidenceScore: 0.6,
+				rejectScore: 0.35
+			},
+			spotify: { clientId: 'x', clientSecret: 'y' },
 			soulseek: { enabled: true, username: 'u', password: 'p', autoLossless: true }
 		});
-		expect(s.pipeline.preferredSource).toBe('soulseek');
-		expect(s.soulseek).not.toHaveProperty('autoLossless');
-	});
-
-	it('the YouTube Music switch maps to the matching source', async () => {
-		const off = await load('b', { pipeline: { formatPreset: 'mp3-320', preferYtMusic: false } });
-		expect(off.pipeline.preferredSource).toBe('youtube');
-		const on = await load('c', { pipeline: { formatPreset: 'flac', preferYtMusic: true } });
-		expect(on.pipeline.preferredSource).toBe('ytmusic');
-	});
-
-	it('keeps a source chosen with the new setting', async () => {
-		const s = await load('d', {
-			pipeline: { formatPreset: 'flac', preferredSource: 'ytmusic' },
-			soulseek: { enabled: true, username: 'u', password: 'p', autoLossless: true }
-		});
-		expect(s.pipeline.preferredSource).toBe('ytmusic');
+		expect(s.pipeline).toMatchObject({ formatPreset: 'opus', concurrency: 3 });
+		expect(s.pipeline).not.toHaveProperty('preferredSource');
+		expect(s.pipeline).not.toHaveProperty('rejectScore');
+		expect(s).not.toHaveProperty('spotify');
+		expect(s).not.toHaveProperty('soulseek');
 	});
 });

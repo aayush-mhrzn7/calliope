@@ -3,7 +3,6 @@ import { ACTIVE_STATUSES, FINISHED_STATUSES } from '$lib/status';
 import { db, schema } from '$lib/server/db';
 import { pipeline } from '$lib/server/pipeline/queue';
 import { toTrackDTO } from '$lib/server/pipeline/tracks';
-import { getSettings } from '$lib/server/settings';
 
 export const load = () => {
 	const open = db
@@ -22,7 +21,6 @@ export const load = () => {
 		.all();
 	return {
 		tracks: [...open, ...finished].map(toTrackDTO),
-		telemetry: pipeline.telemetry(),
-		lowConfidence: getSettings().pipeline.lowConfidenceScore
+		telemetry: pipeline.telemetry()
 	};
 };

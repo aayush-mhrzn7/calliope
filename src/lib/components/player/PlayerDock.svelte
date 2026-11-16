@@ -2,6 +2,7 @@
 	import {
 		ListMusic,
 		LoaderCircle,
+		MicVocal,
 		Pause,
 		Play,
 		SkipBack,
@@ -15,10 +16,26 @@
 	import { duration as fmt } from '$lib/client/format';
 	import { player } from '$lib/client/player.svelte';
 	import Artwork from '../Artwork.svelte';
+	import LyricsPanel from './LyricsPanel.svelte';
 	import Visualizer from './Visualizer.svelte';
 	import Waveform from './Waveform.svelte';
 
 	let showQueue = $state(false);
+	let showLyrics = $state(false);
+	try {
+		showLyrics = localStorage.getItem('calliope:lyrics') === '1';
+	} catch {
+		/* storage unavailable */
+	}
+	function toggleLyrics() {
+		showLyrics = !showLyrics;
+		if (showLyrics) showQueue = false;
+		try {
+			localStorage.setItem('calliope:lyrics', showLyrics ? '1' : '0');
+		} catch {
+			/* storage unavailable */
+		}
+	}
 	let lastVolume = 0.8;
 
 	const t = $derived(player.current);
@@ -32,6 +49,7 @@
 			player.toggle();
 		} else if (e.key === 'ArrowRight' && e.shiftKey) player.next();
 		else if (e.key === 'ArrowLeft' && e.shiftKey) player.prev();
+		else if (e.key === 'l' && !e.metaKey && !e.ctrlKey && !e.altKey) toggleLyrics();
 	}
 </script>
 
@@ -42,10 +60,13 @@
 		transition:fly={{ y: 80, duration: 250 }}
 		class="fixed right-3 bottom-3 left-3 z-40 lg:left-[252px]"
 	>
+		{#if showLyrics}
+			<LyricsPanel />
+		{/if}
 		{#if showQueue}
 			<div
 				transition:slide={{ duration: 180 }}
-				class="glass mb-2 ml-auto max-h-[50dvh] w-full max-w-md overflow-y-auto !bg-ink-850/95 p-2"
+				class="glass mb-2 ml-auto max-h-[50dvh] w-full max-w-md overflow-y-auto !bg-ink-900 p-2"
 			>
 				<div class="flex items-center justify-between px-2 py-1.5">
 					<span class="panel-title">Play queue · {player.queue.length}</span>
@@ -77,9 +98,7 @@
 			</div>
 		{/if}
 
-		<div
-			class="glass flex items-center gap-4 !bg-ink-850/90 px-3 py-2.5 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]"
-		>
+		<div class="glass flex items-center gap-4 !bg-ink-900 px-3 py-2.5">
 			<div class="flex w-[min(280px,40%)] min-w-0 items-center gap-3">
 				<div class="relative">
 					<Artwork src={art(t.id, t.hasArtwork)} title={t.title} size={46} rounded="rounded-lg" />
@@ -103,7 +122,7 @@
 					><SkipBack class="h-4 w-4" /></button
 				>
 				<button
-					class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-glow to-amber text-ink-950 shadow-[0_0_20px_-4px_rgb(245_165_36/0.7)] transition hover:scale-105 active:scale-95"
+					class="flex h-10 w-10 items-center justify-center rounded-full bg-amber text-ink-950 transition-colors hover:bg-amber-glow"
 					onclick={() => player.toggle()}
 					aria-label={player.playing ? 'Pause' : 'Play'}
 				>
@@ -176,8 +195,19 @@
 					aria-label="Volume"
 				/>
 				<button
+					class="btn btn-ghost btn-icon {showLyrics ? '!text-amber' : ''}"
+					onclick={toggleLyrics}
+					aria-label="Lyrics"
+					title="Lyrics (L)"
+				>
+					<MicVocal class="h-4 w-4" />
+				</button>
+				<button
 					class="btn btn-ghost btn-icon {showQueue ? '!text-amber' : ''}"
-					onclick={() => (showQueue = !showQueue)}
+					onclick={() => {
+						showQueue = !showQueue;
+						if (showQueue) showLyrics = false;
+					}}
 					aria-label="Queue"
 				>
 					<ListMusic class="h-4 w-4" />

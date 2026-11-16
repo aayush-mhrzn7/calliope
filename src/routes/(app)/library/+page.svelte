@@ -169,7 +169,10 @@
 			else next.add(r.id);
 			selected = next;
 		} else {
-			selected = new Set([r.id]);
+			// A plain click plays the song; Shift/⌘-click select songs for bulk actions
+			if (selected.size) selected = new Set();
+			if (player.current?.id === r.id) player.toggle();
+			else playFrom(i);
 		}
 		lastClicked = i;
 	}
@@ -451,10 +454,9 @@
 						<div
 							role="row"
 							tabindex="-1"
-							class="group flex h-11 cursor-default items-center gap-3 border-b border-white/[0.03] px-3 text-[13px] transition-colors select-none
+							class="group flex h-11 cursor-pointer items-center gap-3 border-b border-white/[0.03] px-3 text-[13px] transition-colors select-none
 								{selected.has(r.id) ? 'bg-amber/[0.07]' : 'hover:bg-white/[0.025]'}"
 							onclick={(e) => clickRow(e, r, i)}
-							ondblclick={() => playFrom(i)}
 							onkeydown={(e) => e.key === 'Enter' && playFrom(i)}
 						>
 							<div class="relative w-8 shrink-0">
@@ -537,7 +539,7 @@
 							)}
 						>
 							<div
-								class="aspect-square overflow-hidden rounded-xl border border-white/8 bg-ink-800 shadow-lg transition group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.9)]"
+								class="aspect-square overflow-hidden rounded-md border border-ink-700 bg-ink-800 transition-colors group-hover:border-ink-500"
 							>
 								{#if a.cover}
 									<img
@@ -547,9 +549,7 @@
 										class="h-full w-full object-cover"
 									/>
 								{:else}
-									<div
-										class="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink-700 to-ink-850"
-									>
+									<div class="flex h-full w-full items-center justify-center bg-ink-850">
 										<Disc3 class="h-10 w-10 text-ink-500" />
 									</div>
 								{/if}

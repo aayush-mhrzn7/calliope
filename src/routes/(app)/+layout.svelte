@@ -25,7 +25,7 @@
 
 <div class="flex min-h-dvh">
 	<aside
-		class="glass sticky top-3 m-3 mr-0 hidden h-[calc(100dvh-24px)] w-60 shrink-0 !rounded-2xl lg:block"
+		class="glass sticky top-3 m-3 mr-0 hidden h-[calc(100dvh-24px)] w-60 shrink-0 !rounded-md lg:block"
 	>
 		<Sidebar />
 	</aside>
@@ -33,7 +33,7 @@
 	{#if drawer}
 		<div class="fixed inset-0 z-40 lg:hidden">
 			<button
-				class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+				class="absolute inset-0 bg-black/80"
 				onclick={() => (drawer = false)}
 				aria-label="Close menu"
 			></button>
@@ -47,7 +47,7 @@
 
 	<main class="min-w-0 flex-1 px-4 lg:px-6 {player.current ? 'pb-28' : 'pb-10'}">
 		<div
-			class="sticky top-0 z-30 -mx-4 mb-2 flex items-center gap-3 bg-ink-950/80 px-4 py-3 backdrop-blur lg:hidden"
+			class="sticky top-0 z-30 -mx-4 mb-2 flex items-center gap-3 border-b border-ink-800 bg-ink-950 px-4 py-3 lg:hidden"
 		>
 			<button class="btn btn-ghost btn-icon" onclick={() => (drawer = !drawer)} aria-label="Menu">
 				{#if drawer}<X class="h-4 w-4" />{:else}<Menu class="h-4 w-4" />{/if}

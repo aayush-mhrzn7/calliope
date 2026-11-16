@@ -22,7 +22,7 @@
 <div class="glass group flex animate-rise flex-col p-4 transition hover:border-white/12">
 	<div class="flex gap-3">
 		<a href="/sources/{source.id}"
-			><Artwork src={source.artworkUrl} title={source.name} size={64} rounded="rounded-xl" /></a
+			><Artwork src={source.artworkUrl} title={source.name} size={64} rounded="rounded-md" /></a
 		>
 		<div class="min-w-0 flex-1">
 			<a
@@ -52,10 +52,7 @@
 			{/if}
 		</div>
 		<div class="h-1.5 overflow-hidden rounded-full bg-white/5">
-			<div
-				class="h-full rounded-full bg-gradient-to-r from-violet to-amber transition-[width] duration-700"
-				style="width:{pct}%"
-			></div>
+			<div class="h-full bg-amber transition-[width] duration-700" style="width:{pct}%"></div>
 		</div>
 	</div>
 

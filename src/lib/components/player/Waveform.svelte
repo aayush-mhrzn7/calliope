@@ -35,17 +35,13 @@
 		const played = progress * width;
 		const hoverX = hover !== null ? hover * width : null;
 
-		const playedGrad = g.createLinearGradient(0, 0, width, 0);
-		playedGrad.addColorStop(0, '#8b5cf6');
-		playedGrad.addColorStop(1, '#ffb547');
-
 		for (let i = 0; i < bars; i++) {
 			const v = data[Math.floor((i / bars) * data.length)] / 255;
 			const h = Math.max(2, v * (height - 4));
 			const x = i * 3;
 			const y = (height - h) / 2;
-			if (x < played) g.fillStyle = playedGrad;
-			else if (hoverX !== null && x < hoverX) g.fillStyle = 'rgba(255,181,71,0.35)';
+			if (x < played) g.fillStyle = '#3fb950';
+			else if (hoverX !== null && x < hoverX) g.fillStyle = 'rgba(63,185,80,0.4)';
 			else g.fillStyle = peaks ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.06)';
 			g.fillRect(x, y, 2, h);
 		}
