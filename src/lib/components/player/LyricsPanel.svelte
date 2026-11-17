@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { LoaderCircle, MicVocal } from '@lucide/svelte';
+	import { ChevronDown, LoaderCircle, MicVocal } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
 	import { api } from '$lib/client/api';
 	import { player } from '$lib/client/player.svelte';
 	import { activeLine, type LyricsDTO } from '$lib/lyrics';
+
+	let { onclose }: { onclose: () => void } = $props();
 
 	const SOURCE_LABEL: Record<string, string> = {
 		embedded: 'From the file',
@@ -40,15 +42,35 @@
 
 	const active = $derived(lyrics?.synced ? activeLine(lyrics.lines, player.time + 0.15) : -1);
 
-	$effect(() => {
-		const i = active;
-		if (i < 0 || !box || Date.now() < manualUntil) return;
-		const el = box.querySelector<HTMLElement>(`[data-line="${i}"]`);
+	/** Put the sung line in the middle of the panel. */
+	function center(smooth: boolean) {
+		if (active < 0 || !box || Date.now() < manualUntil) return;
+		const el = box.querySelector<HTMLElement>(`[data-line="${active}"]`);
 		if (!el) return;
 		box.scrollTo({
 			top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2,
-			behavior: 'smooth'
+			behavior: smooth ? 'smooth' : 'instant'
 		});
+	}
+
+	// Line to line while the song plays
+	$effect(() => {
+		void active;
+		center(true);
+	});
+
+	// Opening the panel mid-song (or new lyrics arriving) jumps straight to the current line. The
+	// panel slides open, so keep it centered while its height is still changing.
+	$effect(() => {
+		if (!box) return;
+		const ro = new ResizeObserver(() => center(false));
+		ro.observe(box);
+		return () => ro.disconnect();
+	});
+	$effect(() => {
+		void lyrics;
+		const raf = requestAnimationFrame(() => center(false));
+		return () => cancelAnimationFrame(raf);
 	});
 
 	function onUserScroll() {
@@ -58,9 +80,21 @@
 
 <div
 	transition:slide={{ duration: 180 }}
-	class="glass mb-2 ml-auto flex max-h-[55dvh] w-full max-w-md flex-col !bg-ink-900"
+	class="glass pointer-events-auto mb-2 ml-auto flex max-h-[55dvh] w-full max-w-md flex-col !bg-ink-900"
 >
-	<div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
+	<div
+		class="flex cursor-pointer items-center gap-2 px-4 pt-3 pb-2 hover:bg-ink-850"
+		role="button"
+		tabindex="0"
+		title="Close lyrics"
+		onclick={onclose}
+		onkeydown={(e) => {
+			if (e.key !== 'Enter' && e.key !== ' ') return;
+			e.preventDefault();
+			e.stopPropagation();
+			onclose();
+		}}
+	>
 		<span class="panel-title flex items-center gap-1.5"
 			><MicVocal class="h-3.5 w-3.5" /> Lyrics</span
 		>
@@ -72,6 +106,7 @@
 				{lyrics.synced ? 'Synced' : 'Plain'} · {lyrics.source === 'lrclib' ? 'LRCLIB' : 'Saved'}
 			</span>
 		{/if}
+		<ChevronDown class="ml-auto h-4 w-4 text-ink-400" />
 	</div>
 
 	<div

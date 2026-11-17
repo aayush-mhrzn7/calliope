@@ -58,15 +58,15 @@
 {#if t}
 	<div
 		transition:fly={{ y: 80, duration: 250 }}
-		class="fixed right-3 bottom-3 left-3 z-40 lg:left-[252px]"
+		class="pointer-events-none fixed right-3 bottom-3 left-3 z-40 lg:left-[252px]"
 	>
 		{#if showLyrics}
-			<LyricsPanel />
+			<LyricsPanel onclose={toggleLyrics} />
 		{/if}
 		{#if showQueue}
 			<div
 				transition:slide={{ duration: 180 }}
-				class="glass mb-2 ml-auto max-h-[50dvh] w-full max-w-md overflow-y-auto !bg-ink-900 p-2"
+				class="glass pointer-events-auto mb-2 ml-auto max-h-[50dvh] w-full max-w-md overflow-y-auto !bg-ink-900 p-2"
 			>
 				<div class="flex items-center justify-between px-2 py-1.5">
 					<span class="panel-title">Play queue · {player.queue.length}</span>
@@ -98,7 +98,7 @@
 			</div>
 		{/if}
 
-		<div class="glass flex items-center gap-4 !bg-ink-900 px-3 py-2.5">
+		<div class="glass pointer-events-auto flex items-center gap-4 !bg-ink-900 px-3 py-2.5">
 			<div class="flex w-[min(280px,40%)] min-w-0 items-center gap-3">
 				<div class="relative">
 					<Artwork src={art(t.id, t.hasArtwork)} title={t.title} size={46} rounded="rounded-lg" />
