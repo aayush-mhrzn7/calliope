@@ -24,6 +24,15 @@ export const SettingsSchema = z.object({
 			/** Skip tracks already present in the library index */
 			skipExisting: z.boolean().default(true),
 			maxAttempts: z.number().int().min(1).max(10).default(3),
+			/**
+			 * Where a track's audio comes from first; the other source is the fallback. 'soulseek' needs
+			 * Soulseek set up and looks for a real lossless copy before downloading the YouTube video.
+			 */
+			preferredSource: z.preprocess(
+				// Older versions also had 'ytmusic' (YouTube Music search): that is YouTube now
+				(v) => (v === 'ytmusic' ? 'youtube' : v),
+				z.enum(['youtube', 'soulseek']).default('youtube')
+			),
 			/** Look up album, track numbers, year, genres and cover art on MusicBrainz */
 			enrichMusicBrainz: z.boolean().default(true)
 		})
@@ -78,6 +87,19 @@ export const SettingsSchema = z.object({
 			apiKey: str()
 		})
 		.prefault({}),
+	soulseek: z
+		.object({
+			enabled: z.boolean().default(false),
+			username: str(),
+			password: str(),
+			/** Port other users connect to. Results and transfers work best when it is reachable. */
+			listenPort: z.number().int().min(1024).max(65535).default(2234),
+			/** Give up on a peer that keeps a download queued this long (retried later) */
+			queueTimeoutMinutes: z.number().int().min(1).max(720).default(10),
+			/** Between equally good matches, take a copy above CD quality (24-bit) over the CD rip */
+			preferHiRes: z.boolean().default(false)
+		})
+		.prefault({}),
 	library: z
 		.object({
 			scanOnStartup: z.boolean().default(true),
@@ -95,7 +117,8 @@ export const SECRET_FIELDS = [
 	['navidrome', 'password'],
 	['discord', 'webhookUrl'],
 	['discord', 'botToken'],
-	['acoustid', 'apiKey']
+	['acoustid', 'apiKey'],
+	['soulseek', 'password']
 ] as const;
 export const SECRET_MASK = '••••••••';
 

@@ -115,7 +115,7 @@
 	// --- integration tests ------------------------------------------------------------
 	let testing = $state<string | null>(null);
 	let testResult = $state<Record<string, { ok: boolean; message: string }>>({});
-	async function test(target: 'navidrome' | 'discord') {
+	async function test(target: 'navidrome' | 'discord' | 'soulseek') {
 		if (dirty) await save();
 		testing = target;
 		try {
@@ -331,10 +331,19 @@
 							>{/each}. Set a source's format to Default to follow this setting.
 					</p>
 				{/if}
-				{#if draft.pipeline.formatPreset === 'flac'}
+				{#if draft.soulseek.enabled && draft.pipeline.preferredSource === 'soulseek'}
+					<p class="pb-3 text-xs text-ink-300">
+						Files found on Soulseek keep their own lossless format whatever is chosen here. This
+						format is used for tracks that fall back to YouTube{draft.pipeline.formatPreset ===
+						'flac'
+							? ', whose audio is lossy — FLAC only makes those files larger'
+							: ''}.
+					</p>
+				{:else if draft.pipeline.formatPreset === 'flac'}
 					<p class="pb-3 text-xs text-warn/90">
 						YouTube audio is lossy (Opus/AAC ~128–160 kbps). FLAC preserves it exactly but can't add
-						quality back — files are just larger. Opus keeps YouTube's audio without re-encoding.
+						quality back — files are just larger. For real lossless files, set up Soulseek under
+						Integrations and make it the preferred source in Workers.
 					</p>
 				{/if}
 			</Section>
@@ -374,6 +383,22 @@
 						/>
 						<span class="w-4 font-mono text-sm text-amber-glow">{draft.pipeline.concurrency}</span>
 					</div>
+				</Field>
+				<Field
+					row
+					label="Preferred source"
+					hint={draft.pipeline.preferredSource === 'soulseek'
+						? draft.soulseek.enabled
+							? 'Look for a real lossless (FLAC) copy on Soulseek first. Songs it cannot find are downloaded from YouTube in the output format.'
+							: 'Soulseek is turned off under Integrations, so songs come from YouTube until it is enabled.'
+						: `Download the YouTube video's audio.${draft.soulseek.enabled ? ' Songs YouTube cannot deliver are looked up on Soulseek.' : ''}`}
+				>
+					<select class="input !w-44" bind:value={draft.pipeline.preferredSource}>
+						<option value="youtube">YouTube</option>
+						<option value="soulseek"
+							>Soulseek{draft.soulseek.enabled ? '' : ' (not enabled)'}</option
+						>
+					</select>
 				</Field>
 				<Field
 					row
@@ -681,6 +706,83 @@
 						bind:value={draft.acoustid.apiKey}
 					/></Field
 				>
+			</Section>
+
+			<Section
+				title="Soulseek"
+				description="Search the Soulseek network and download files in their original format, such as real FLAC. Calliope signs in with its own built-in client, so use an account no other Soulseek app is signed in to — one account can only be online in one place."
+			>
+				{#snippet actions()}
+					<button
+						class="btn btn-sm"
+						onclick={() => test('soulseek')}
+						disabled={testing === 'soulseek' || !draft.soulseek.enabled || !draft.soulseek.username}
+					>
+						{#if testing === 'soulseek'}<LoaderCircle class="h-3 w-3 animate-spin" />{/if} Test
+					</button>
+				{/snippet}
+				<Field row label="Enabled"
+					><Switch bind:checked={draft.soulseek.enabled} label="Soulseek" /></Field
+				>
+				<div class="grid gap-x-4 sm:grid-cols-2">
+					<Field label="Username"
+						><input
+							class="input"
+							autocomplete="off"
+							bind:value={draft.soulseek.username}
+							oninput={() => (draft.soulseek.enabled ||= !!draft.soulseek.username)}
+						/></Field
+					>
+					<Field label="Password"
+						><input
+							class="input"
+							type="password"
+							autocomplete="new-password"
+							bind:value={draft.soulseek.password}
+						/></Field
+					>
+				</div>
+				<Field
+					row
+					label="Listening port"
+					hint="Other users connect here to answer searches and send files. Works without it, but forwarding this TCP port on your router (and publishing it in Docker) gives more results."
+				>
+					<input
+						type="number"
+						min="1024"
+						max="65535"
+						class="input !w-24 text-right font-mono"
+						bind:value={draft.soulseek.listenPort}
+					/>
+				</Field>
+				<Field
+					row
+					label="Wait for a queued download"
+					hint="Busy peers put you in a queue. After this long without the transfer starting, the download is dropped and retried later."
+				>
+					<div class="flex items-center gap-2">
+						<input
+							type="number"
+							min="1"
+							max="720"
+							class="input !w-20 text-right font-mono"
+							bind:value={draft.soulseek.queueTimeoutMinutes}
+						/>
+						<span class="text-xs text-ink-400">min</span>
+					</div>
+				</Field>
+				<Field
+					row
+					label="Prefer hi-res"
+					hint="When several peers share the same track, take a 24-bit or high sample rate copy over the CD rip. Most music only exists in CD quality (16-bit / 44.1 kHz), and hi-res files are several times larger."
+				>
+					<Switch bind:checked={draft.soulseek.preferHiRes} label="Prefer hi-res" />
+				</Field>
+				{#if testResult.soulseek}<p
+						class="py-2 text-xs {testResult.soulseek.ok ? 'text-ok' : 'text-bad'}"
+					>
+						{testResult.soulseek.message}
+					</p>{/if}
 			</Section>
 		{:else if data.section === 'account'}
 			<Section title="Password">

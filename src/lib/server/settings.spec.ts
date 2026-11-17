@@ -19,7 +19,7 @@ async function load(name: string, rows: Record<string, object>) {
 }
 
 describe('settings from older versions', () => {
-	it('drops removed options (Spotify, Soulseek, match thresholds) and keeps the rest', async () => {
+	it('drops removed options (Spotify, match thresholds) and keeps Soulseek', async () => {
 		const s = await load('a', {
 			pipeline: {
 				formatPreset: 'opus',
@@ -33,9 +33,16 @@ describe('settings from older versions', () => {
 			soulseek: { enabled: true, username: 'u', password: 'p', autoLossless: true }
 		});
 		expect(s.pipeline).toMatchObject({ formatPreset: 'opus', concurrency: 3 });
-		expect(s.pipeline).not.toHaveProperty('preferredSource');
+		// YouTube Music search is gone: plain YouTube takes its place
+		expect(s.pipeline.preferredSource).toBe('youtube');
 		expect(s.pipeline).not.toHaveProperty('rejectScore');
 		expect(s).not.toHaveProperty('spotify');
-		expect(s).not.toHaveProperty('soulseek');
+		expect(s.soulseek).toMatchObject({ enabled: true, username: 'u', password: 'p' });
+		expect(s.soulseek).not.toHaveProperty('autoLossless');
+	});
+
+	it('keeps Soulseek as the preferred source', async () => {
+		const s = await load('b', { pipeline: { preferredSource: 'soulseek' } });
+		expect(s.pipeline.preferredSource).toBe('soulseek');
 	});
 });

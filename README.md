@@ -22,6 +22,12 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
 - **Tagging:** title, artists, album, album artist, track/disc numbers, year, cover art and
   (synced) lyrics from LRCLIB, written natively with TagLib for MP3, M4A, Opus and FLAC.
 - **Filing:** a folder template engine, e.g. `{albumartist|artist}/{album|Singles}/[{track:02} - ]{title}`.
+- **Soulseek:** optional built-in client. Search what other users share, filter to FLAC or any
+  lossless format, and queue single files or whole folders. Files keep their original format and
+  tags and go through the same tagging and filing as other downloads.
+  Pick the preferred source under Settings › Workers: with Soulseek first, every download is
+  looked up there for a real lossless copy and falls back to YouTube; with YouTube first,
+  Soulseek is the fallback for videos YouTube cannot deliver.
 - **Integrations:** Navidrome rescan and Discord notifications (webhook or bot).
 
 **Library**
@@ -43,6 +49,7 @@ Calliope v2: a ground-up rewrite of the original Next.js app on SvelteKit 5, Dri
   - MusicBrainz search and auto-match, plus AcoustID audio identification
   - Cover Art Archive artwork, image upload, LRCLIB lyrics
   - organize files by template
+  - upgrade lossy files to FLAC: find the same recording on Soulseek and replace the file
 - **Duplicate Inspector:** three engines (identical audio hash, same normalized tags, Chromaprint
   acoustic similarity) and a side-by-side comparison matrix. The best copy is picked automatically,
   and resolving can merge missing tags, artwork and lyrics into it. Removed copies go to a quarantine
@@ -101,7 +108,13 @@ The first visit opens a setup screen to choose the library and staging folders a
 ## Notes
 
 - **Formats:** YouTube audio is lossy. The FLAC preset stores it losslessly but adds no quality.
-  Opus avoids re-encoding.
+  Opus avoids re-encoding. For real lossless files, use Soulseek.
+- **Soulseek:** turn it on under Settings › Integrations with an account no other Soulseek app is
+  signed in to (one account can be online in one place only). It works without an open port; for
+  more results, publish the listening port (default 2234) in Docker and forward it on your router.
+  Busy peers queue requests, so a download can wait before it starts; after the configured wait it
+  is dropped and retried. Calliope downloads but does not share files, and some users only serve
+  people who share. Files over 400 MB are refused. Only download what you have the right to.
 
 ## Development
 
